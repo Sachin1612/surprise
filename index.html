@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Happy Birthday, Monu! — Our Story Across Time</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Playfair Display, Plus Jakarta Sans, Patrick Hand & Comic Neue -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,700;1,700&family=Patrick+Hand&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- GSAP 3 + ScrollTrigger + Canvas Confetti -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            bubble: ['"Patrick Hand"', '"Comic Neue"', 'cursive'],
+          },
+          colors: {
+            ghibli: {
+              cream: '#FFFDF9',
+              blush: '#FFF1F3',
+              rose: '#FAD2D8',
+              coral: '#E05A6D',
+              deep: '#9F2B3F',
+              gold: '#D4A24C',
+              goldLight: '#F6DF9F',
+              ink: '#2E1A1E',
+              muted: '#6E4F55',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* Start pristine pure blank white (#FFFFFF) for the first 0.5s opening sequence */
+    html, body {
+      background-color: #FFFFFF;
+      color: #2E1A1E;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    /* Warm golden-blush radial bloom overlay that expands out of the white canvas */
+    #opening-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(255, 232, 214, 0.85) 0%, rgba(255, 241, 243, 0.92) 48%, #FFFDF9 100%);
+    }
+
+    /* Initial hidden states for GSAP opening choreography (prevents FOUC) */
+    .gsap-init-hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Ambient floating sakura & gold particles */
+    .ambient-petal {
+      position: fixed;
+      pointer-events: none;
+      z-index: 2;
+      will-change: transform, opacity;
+      user-select: none;
+    }
+
+    /* Authentic Webtoon Speech Bubble */
+    .webtoon-speech {
+      position: relative;
+      background: #FFFFFF;
+      border: 2.2px solid #2E1A1E;
+      border-radius: 20px;
+      padding: 11px 15px;
+      box-shadow: 3px 4px 0px rgba(46, 26, 30, 0.14);
+      will-change: transform, opacity;
+    }
+
+    .webtoon-speech::after {
+      content: '';
+      position: absolute;
+      bottom: -11px;
+      left: 24px;
+      border-width: 11px 9px 0;
+      border-style: solid;
+      border-color: #2E1A1E transparent transparent transparent;
+    }
+
+    .webtoon-speech::before {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 26px;
+      border-width: 9px 7px 0;
+      border-style: solid;
+      border-color: #FFFFFF transparent transparent transparent;
+      z-index: 1;
+    }
+
+    /* Authentic Webtoon Thought Cloud Bubble */
+    .webtoon-thought {
+      position: relative;
+      background: linear-gradient(180deg, #FFFFFF 0%, #FFF7F8 100%);
+      border: 2px dashed #E05A6D;
+      border-radius: 26px;
+      padding: 11px 16px;
+      box-shadow: 0 8px 20px -8px rgba(224, 90, 109, 0.28);
+      will-change: transform, opacity;
+    }
+
+    .webtoon-thought::after {
+      content: '● • ·';
+      position: absolute;
+      bottom: -18px;
+      left: 22px;
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: #E05A6D;
+      font-weight: 700;
+    }
+
+    /* 3D Envelope Perspective */
+    .envelope-stage {
+      perspective: 1100px;
+    }
+
+    .envelope-box {
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+
+    .envelope-flap {
+      transform-origin: top center;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      will-change: transform;
+    }
+
+    /* Spin Wheel Disc */
+    .wheel-stage {
+      position: relative;
+      width: 276px;
+      height: 276px;
+      max-width: 76vw;
+      max-height: 76vw;
+      margin: 0 auto;
+    }
+
+    .wheel-rotor {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 6px solid #2E1A1E;
+      box-shadow:
+        0 18px 36px -12px rgba(46, 26, 30, 0.35),
+        inset 0 0 0 4px #F6DF9F;
+      position: relative;
+      overflow: hidden;
+      will-change: transform;
+    }
+
+    .wheel-ticker {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      transform-origin: top center;
+      z-index: 25;
+      width: 0;
+      height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-top: 28px solid #9F2B3F;
+      filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.26));
+      will-change: transform;
+    }
+
+    /* Gold Scratch Card */
+    .scratch-frame {
+      position: relative;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 2.5px solid #D4A24C;
+      box-shadow: 0 14px 30px -12px rgba(46, 26, 30, 0.26);
+    }
+
+    #scratch-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: grab;
+      z-index: 10;
+    }
+
+    #scratch-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Custom Scrollbar for Drawer */
+    .drawer-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .drawer-scroll::-webkit-scrollbar-thumb {
+      background: #FAD2D8;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased selection:bg-ghibli-rose selection:text-ghibli-ink">
+
+  <!-- Warm Radial Golden-Blush Backdrop (fades in after 0.5s blank white screen) -->
+  <div id="opening-backdrop" aria-hidden="true"></div>
+
+  <!-- Ambient Sakura & Gold Particles Layer -->
+  <div id="ambient-particles" aria-hidden="true"></div>
+
+  <!-- Top Reading Progress Bar -->
+  <div class="fixed top-0 left-0 right-0 h-1.5 z-50 bg-white/40 backdrop-blur-xs">
+    <div
+      id="reading-progress-bar"
+      class="h-full w-0 bg-gradient-to-r from-ghibli-coral via-ghibli-gold to-ghibli-deep rounded-r-full"
+    ></div>
+  </div>
+
+  <!-- Non-blocking Toast Banner -->
+  <div
+    id="toast-banner"
+    class="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[92%] bg-ghibli-ink text-white text-xs sm:text-sm font-medium px-4 py-3 rounded-2xl shadow-2xl border border-ghibli-gold/50 flex items-center justify-between gap-3 opacity-0 pointer-events-none -translate-y-4"
+    role="status"
+    aria-live="polite"
+  >
+    <span id="toast-text">Welcome!</span>
+    <button
+      type="button"
+      id="toast-dismiss"
+      class="text-ghibli-goldLight hover:text-white font-bold px-2 py-1 rounded-lg cursor-pointer"
+      aria-label="Close notification"
+    >
+      ✕
+    </button>
+  </div>
+
+  <!-- Top Sticky Utility Bar -->
+  <header
+    id="top-header-bar"
+    class="gsap-init-hidden sticky top-1.5 z-40 max-w-xl mx-auto px-3 pt-2"
+  >
+    <div class="bg-white/85 backdrop-blur-md border border-ghibli-rose/80 rounded-2xl px-3.5 py-2.5 shadow-sm flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="text-base shrink-0" aria-hidden="true">📖</span>
+        <span class="font-display font-bold text-xs sm:text-sm text-ghibli-ink truncate">
+          Monu’s Birthday Webtoon
+        </span>
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <!-- Live Mode vs Preview / Test Mode Toggle -->
+        <button
+          type="button"
+          id="mode-toggle-btn"
+          class="magnetic-btn inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-ghibli-ink border border-ghibli-gold/70 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+          title="Switch between Live IST Timers and Preview/Test Mode"
+        >
+          <span id="mode-toggle-icon">🔒</span>
+          <span id="mode-toggle-text">Live Mode</span>
+        </button>
+
+        <!-- Customize Scene Images Drawer Button -->
+        <button
+          type="button"
+          id="open-drawer-btn"
+          class="magnetic-btn inline-flex items-center gap-1 bg-ghibli-blush hover:bg-ghibli-rose/60 text-ghibli-deep border border-ghibli-rose text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+        >
+          <span>🖼️</span>
+          <span>Customize Images</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Mobile-First Story Container -->
+  <main class="relative z-10 max-w-xl mx-auto px-4 pt-6 pb-28">
+
+    <!-- =================================================================== -->
+    <!-- HERO ENTRANCE SECTION                                               -->
+    <!-- =================================================================== -->
+    <section class="text-center mb-7">
+      <div
+        id="hero-date-badge"
+        class="gsap-init-hidden inline-flex items-center gap-2 bg-white/90 border border-ghibli-rose px-4 py-1.5 rounded-full text-xs font-bold text-ghibli-deep shadow-xs mb-3"
+      >
+        <span>✨</span>
+        <span>22 November 2026</span>
+        <span>•</span>
+        <span>Sachin &amp; Monika</span>
+      </div>
+
+      <h1
+        id="hero-main-title"
+        class="gsap-init-hidden font-display text-3xl sm:text-5xl font-extrabold text-ghibli-ink leading-tight tracking-wide"
+      >
+        Happy Birthday, <span class="text-ghibli-coral italic">Monu</span> ❤️
+      </h1>
+
+      <p
+        id="hero-subtitle"
+        class="gsap-init-hidden mt-2.5 text-sm sm:text-base text-ghibli-muted max-w-md mx-auto leading-relaxed"
+      >
+        From a polite Namaste at your doorway to our sweet little Rishvik—every memory drawn just for you.
+      </p>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- CHAPTER 1: INTERACTIVE 3D WAX-SEAL ENVELOPE + SCENES 1A – 2C       -->
+    <!-- =================================================================== -->
+    <section id="chapter-1" class="scroll-mt-24 space-y-6">
+      <!-- Interactive 3D Clue #1 Envelope Card -->
+      <div id="hero-envelope-wrap" class="gsap-init-hidden envelope-stage">
+        <div
+          id="clue-envelope"
+          role="button"
+          tabindex="0"
+          aria-expanded="false"
+          class="envelope-box relative bg-gradient-to-br from-amber-50 via-white to-ghibli-blush border-2 border-ghibli-gold rounded-3xl p-5 sm:p-6 shadow-lg cursor-pointer select-none overflow-hidden"
+        >
+          <!-- Decorative Top Envelope Flap -->
+          <div
+            id="envelope-flap"
+            class="envelope-flap absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-ghibli-goldLight/90 to-amber-100/70 border-b border-ghibli-gold/50 rounded-t-3xl flex items-end justify-center pb-2 pointer-events-none"
+          >
+            <span class="text-[10px] font-bold uppercase tracking-widest text-ghibli-ink/70">
+              Morning Birthday Note • Chapter 1
+            </span>
+          </div>
+
+          <!-- Closed Envelope State -->
+          <div id="envelope-closed-view" class="pt-16 pb-2 text-center">
+            <div
+              id="wax-seal-btn"
+              class="mx-auto w-14 h-14 rounded-full bg-gradient-to-br from-ghibli-coral to-ghibli-deep text-white flex items-center justify-center text-2xl shadow-md border-2 border-ghibli-goldLight mb-3"
+            >
+              💌
+            </div>
+            <p class="text-xs font-bold uppercase tracking-wider text-ghibli-deep">
+              Chapter 1 • Unlocked for Morning
+            </p>
+            <h2 class="font-display text-xl sm:text-2xl font-bold text-ghibli-ink mt-1">
+              Tap the Wax Seal for Clue #1 ✨
+            </h2>
+            <p class="text-xs text-ghibli-muted mt-1">
+              Open your birthday envelope first, then scroll through Scenes 1A – 2C
+            </p>
+          </div>
+
+          <!-- Opened Gold-Bordered Card State -->
+          <div id="envelope-opened-view" class="hidden pt-14 text-center">
+            <div
+              id="clue-lifted-card"
+              class="bg-white border-2 border-ghibli-gold rounded-2xl p-4 sm:p-5 shadow-md"
+            >
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ghibli-deep bg-ghibli-blush px-3 py-1 rounded-full mb-2">
+                <span>🔑</span>
+                <span>Morning Clue Revealed</span>
+              </span>
+              <p class="font-display text-lg sm:text-xl font-bold text-ghibli-ink leading-snug">
+                “Clue #1: Look inside your dressing table drawer”
+              </p>
+              <p class="mt-2 text-xs text-ghibli-muted">
+                Happy Birthday, Monu! Scroll down to begin our webtoon story from Scene 1A.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chapter 1 Section Header -->
+      <div class="flex items-center gap-3 pt-2">
+        <div class="h-px flex-1 bg-ghibli-rose"></div>
+        <span class="text-xs font-bold uppercase tracking-widest text-ghibli-deep bg-white/90 px-3.5 py-1.5 rounded-full border border-ghibli-rose shadow-2xs">
+          Chapter 1 • The Beginning (1A – 2C)
+        </span>
+        <div class="h-px flex-1 bg-ghibli-rose"></div>
+      </div>
+
+      <!-- Chapter 1 Webtoon Panels Container -->
+      <div id="panels-ch1" class="space-y-6"></div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- CHAPTER 2: 1:00 PM IST TIME-LOCKED SPIN WHEEL + SCENES 3A – 5B      -->
+    <!-- =================================================================== -->
+    <section id="chapter-2" class="scroll-mt-24 mt-12 space-y-6">
+      <div class="flex items-center gap-3">
+        <div class="h-px flex-1 bg-ghibli-rose"></div>
+        <span class="text-xs font-bold uppercase tracking-widest text-ghibli-deep bg-white/90 px-3.5 py-1.5 rounded-full border border-ghibli-rose shadow-2xs">
+          Chapter 2 • 1:00 PM IST Unlock
+        </span>
+        <div class="h-px flex-1 bg-ghibli-rose"></div>
+      </div>
+
+      <!-- Spin Wheel Interactive Card -->
+      <div class="bg-white/95 backdrop-blur-sm rounded-3xl p-5 sm:p-6 border border-ghibli-rose shadow-lg text-center">
+        <span class="inline-block text-[11px] font-bold uppercase tracking-wider text-ghibli-coral bg-ghibli-blush px-3 py-1 rounded-full">
+          Afternoon Interactive Gate
+        </span>
+        <h2 class="font-display text-2xl font-bold text-ghibli-ink mt-2">
+          Spin the Story Wheel
+        </h2>
+        <p class="mt-1 text-xs sm:text-sm text-ghibli-muted max-w-md mx-auto">
+          Unlocks at <strong class="text-ghibli-ink">1:00 PM IST on November 22, 2026</strong> to reveal our family visit, terrace talk, late-night chats, and Regional Park watch gift!
+        </p>
+
+        <!-- Live Countdown Banner (visible before 1:00 PM IST in Live Mode) -->
+        <div
+          id="ch2-countdown-box"
+          class="mt-4 bg-ghibli-blush/80 border border-ghibli-rose rounded-2xl p-4"
+        >
+          <p class="text-[11px] font-bold uppercase tracking-wider text-ghibli-deep mb-2.5">
+            ⏳ Countdown to 1:00 PM IST Unlock
+          </p>
+          <div class="grid grid-cols-4 gap-2 max-w-xs mx-auto">
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd2-days" class="font-display text-xl font-bold text-ghibli-ink">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Days</div>
+            </div>
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd2-hours" class="font-display text-xl font-bold text-ghibli-ink">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Hours</div>
+            </div>
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd2-mins" class="font-display text-xl font-bold text-ghibli-ink">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Mins</div>
+            </div>
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd2-secs" class="font-display text-xl font-bold text-ghibli-coral">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Secs</div>
+            </div>
+          </div>
+          <p id="ch2-lock-hint" class="mt-2.5 text-[11px] text-ghibli-muted">
+            Switch to <strong>Preview / Test Mode</strong> in the top bar to test spinning anytime.
+          </p>
+        </div>
+
+        <!-- Spin Wheel Stage -->
+        <div class="mt-6">
+          <div id="wheel-container" class="wheel-stage">
+            <div id="wheel-ticker" class="wheel-ticker" aria-hidden="true"></div>
+            <div id="wheel-rotor" class="wheel-rotor" role="img" aria-label="Birthday story spin wheel"></div>
+
+            <!-- Frosted Glass Padlock Overlay (active before 1:00 PM IST in Live Mode) -->
+            <div
+              id="wheel-padlock-overlay"
+              class="absolute inset-0 z-20 rounded-full bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center border-2 border-ghibli-rose cursor-pointer"
+            >
+              <span class="text-3xl mb-1" aria-hidden="true">🔒</span>
+              <span class="text-xs font-bold uppercase tracking-wider text-ghibli-ink">
+                Locked Until 1:00 PM IST
+              </span>
+              <span class="text-[11px] text-ghibli-muted mt-0.5">Nov 22, 2026</span>
+            </div>
+
+            <!-- Center Spin Hub Button -->
+            <button
+              type="button"
+              id="wheel-spin-btn"
+              class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 w-20 h-20 rounded-full bg-ghibli-ink text-ghibli-goldLight font-display font-bold text-sm border-4 border-ghibli-gold shadow-xl hover:scale-105 active:scale-95 transition cursor-pointer flex flex-col items-center justify-center leading-tight"
+            >
+              <span id="wheel-btn-label">SPIN</span>
+              <span id="wheel-btn-sub" class="text-[10px] font-sans uppercase tracking-wider text-white/85">
+                Story
+              </span>
+            </button>
+          </div>
+
+          <p id="wheel-status-msg" class="mt-4 text-xs sm:text-sm font-semibold text-ghibli-deep min-h-[1.25rem]"></p>
+        </div>
+      </div>
+
+      <!-- Locked Placeholder for Chapter 2 Panels -->
+      <div
+        id="ch2-locked-card"
+        class="bg-white/75 border border-dashed border-ghibli-rose rounded-3xl p-6 text-center"
+      >
+        <p class="text-2xl mb-1" aria-hidden="true">🎡</p>
+        <p class="font-semibold text-sm text-ghibli-ink">
+          Scenes 3A – 5B Are Waiting Inside the Wheel
+        </p>
+        <p class="text-xs text-ghibli-muted mt-1">
+          At 1:00 PM IST (or in Test Mode), spin the wheel above to unlock the next 20 panels of our story!
+        </p>
+      </div>
+
+      <!-- Unlocked Chapter 2 Webtoon Panels Container -->
+      <div id="panels-ch2" class="hidden space-y-6"></div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- CHAPTER 3: 5:00 PM IST GOLD SCRATCH CARD + SCENES 6B-2, 6C-1 & 7    -->
+    <!-- =================================================================== -->
+    <section id="chapter-3" class="scroll-mt-24 mt-12 space-y-6">
+      <div class="flex items-center gap-3">
+        <div class="h-px flex-1 bg-ghibli-rose"></div>
+        <span class="text-xs font-bold uppercase tracking-widest text-ghibli-deep bg-white/90 px-3.5 py-1.5 rounded-full border border-ghibli-rose shadow-2xs">
+          Chapter 3 • 5:00 PM IST Finale
+        </span>
+        <div class="h-px flex-1 bg-ghibli-rose"></div>
+      </div>
+
+      <!-- Scratch Card Interactive Card -->
+      <div class="bg-white/95 backdrop-blur-sm rounded-3xl p-5 sm:p-6 border border-ghibli-rose shadow-lg">
+        <div class="text-center">
+          <span class="inline-block text-[11px] font-bold uppercase tracking-wider text-ghibli-coral bg-ghibli-blush px-3 py-1 rounded-full">
+            Evening Finale Gate
+          </span>
+          <h2 class="font-display text-2xl font-bold text-ghibli-ink mt-2">
+            Scratch the Golden Card
+          </h2>
+          <p class="mt-1 text-xs sm:text-sm text-ghibli-muted max-w-md mx-auto">
+            Unlocks at <strong class="text-ghibli-ink">5:00 PM IST on November 22, 2026</strong>—rub the metallic gold foil to reveal our Roka, Wedding Day, Baby Rishvik, and Birthday Finale!
+          </p>
+        </div>
+
+        <!-- 5:00 PM IST Countdown + Frosted Padlock (before 5:00 PM IST in Live Mode) -->
+        <div
+          id="ch3-countdown-box"
+          class="mt-4 bg-amber-50/90 border border-ghibli-gold/70 rounded-2xl p-4 text-center"
+        >
+          <div class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-ghibli-deep mb-2.5">
+            <span>🔒</span>
+            <span>Countdown to 5:00 PM IST Unlock</span>
+          </div>
+          <div class="grid grid-cols-4 gap-2 max-w-xs mx-auto">
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd3-days" class="font-display text-xl font-bold text-ghibli-ink">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Days</div>
+            </div>
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd3-hours" class="font-display text-xl font-bold text-ghibli-ink">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Hours</div>
+            </div>
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd3-mins" class="font-display text-xl font-bold text-ghibli-ink">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Mins</div>
+            </div>
+            <div class="bg-white rounded-xl py-2 px-1 border border-ghibli-rose">
+              <div id="cd3-secs" class="font-display text-xl font-bold text-ghibli-coral">00</div>
+              <div class="text-[10px] font-semibold uppercase text-ghibli-muted">Secs</div>
+            </div>
+          </div>
+          <p class="mt-2.5 text-[11px] text-ghibli-muted">
+            Switch to <strong>Preview / Test Mode</strong> in the top bar to test scratching early.
+          </p>
+        </div>
+
+        <!-- Interactive Metallic Gold HTML5 Canvas Scratch Card (at/after 5:00 PM IST or in Test Mode) -->
+        <div id="ch3-scratch-wrapper" class="hidden mt-5">
+          <div id="scratch-frame-box" class="scratch-frame h-48 sm:h-52">
+            <!-- Revealed Message Underneath Foil -->
+            <div class="w-full h-full bg-gradient-to-br from-amber-50 via-ghibli-blush to-amber-100 p-5 flex flex-col items-center justify-center text-center">
+              <span class="text-3xl mb-1" aria-hidden="true">💍👶🎂</span>
+              <p class="font-display text-lg sm:text-xl font-bold text-ghibli-ink">
+                ✨ Remaining Chapters Unlocked! ✨
+              </p>
+              <p class="mt-1 text-xs text-ghibli-muted max-w-xs">
+                Scroll down to relive our Roka (28 Jan 2024), Wedding Day (24 Apr 2024), Baby Rishvik (4 Sept 2025), and your Birthday Finale!
+              </p>
+            </div>
+
+            <!-- Metallic Gold Foil Canvas -->
+            <canvas id="scratch-canvas"></canvas>
+          </div>
+
+          <div class="mt-3 flex items-center justify-between gap-2 text-xs text-ghibli-muted">
+            <span id="scratch-pct-label">Scratched: 0%</span>
+            <button
+              type="button"
+              id="quick-reveal-btn"
+              class="bg-ghibli-blush hover:bg-ghibli-rose/70 text-ghibli-deep font-semibold px-3 py-1.5 rounded-xl border border-ghibli-rose transition cursor-pointer"
+            >
+              ✨ Quick Reveal
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Locked Placeholder for Chapter 3 Panels -->
+      <div
+        id="ch3-locked-card"
+        class="bg-white/75 border border-dashed border-ghibli-gold rounded-3xl p-6 text-center"
+      >
+        <p class="text-2xl mb-1" aria-hidden="true">🪙</p>
+        <p id="ch3-locked-heading" class="font-semibold text-sm text-ghibli-ink">
+          Final Chapters Unlock at 5:00 PM IST
+        </p>
+        <p class="text-xs text-ghibli-muted mt-1">
+          No extra surprise—scratching the gold card simply unlocks our Roka, Wedding, Rishvik, and Birthday Finale scenes!
+        </p>
+      </div>
+
+      <!-- Unlocked Chapter 3 Webtoon Panels Container -->
+      <div id="panels-ch3" class="hidden space-y-6"></div>
+
+      <!-- Grand Celebratory Finale Card -->
+      <div
+        id="grand-finale-card"
+        class="hidden bg-gradient-to-br from-ghibli-ink via-ghibli-deep to-ghibli-coral text-white rounded-3xl p-6 sm:p-8 shadow-2xl text-center border-2 border-ghibli-goldLight/60"
+      >
+        <div class="text-4xl mb-2" aria-hidden="true">🎂❤️🥂✨</div>
+        <h3 class="font-display text-2xl sm:text-4xl font-extrabold tracking-tight">
+          Happy Birthday, Monu!
+        </h3>
+        <p class="mt-3 text-sm sm:text-base text-rose-100 leading-relaxed max-w-md mx-auto">
+          From the doorway Namaste that won Papa’s heart to holding our sweet little Rishvik in our arms—every day with you is my favorite chapter. Thank you for being my wife, my best friend, and our home’s brightest light.
+        </p>
+        <p class="mt-4 font-bubble text-2xl text-ghibli-goldLight">
+          — Forever yours, Sachin ❤️
+        </p>
+        <button
+          type="button"
+          id="replay-confetti-btn"
+          class="magnetic-btn mt-5 inline-flex items-center gap-2 bg-white text-ghibli-ink hover:bg-ghibli-goldLight font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-lg transition cursor-pointer"
+        >
+          <span>🎉</span>
+          <span>Celebrate Again (Confetti Burst)</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating Quick-Jump Chapter Pill Bar -->
+  <nav
+    id="quick-jump-bar"
+    aria-label="Quick jump chapters"
+    class="gsap-init-hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-ghibli-ink/92 backdrop-blur-md text-white px-2.5 py-2 rounded-full shadow-2xl border border-ghibli-gold/40 flex items-center gap-1.5"
+  >
+    <a
+      href="#chapter-1"
+      class="px-3.5 py-1.5 rounded-full text-xs font-semibold hover:bg-white/15 transition"
+    >
+      Ch. 1 • Morning
+    </a>
+    <a
+      href="#chapter-2"
+      id="pill-ch2"
+      class="px-3.5 py-1.5 rounded-full text-xs font-semibold hover:bg-white/15 transition"
+    >
+      Ch. 2 • 1 PM
+    </a>
+    <a
+      href="#chapter-3"
+      id="pill-ch3"
+      class="px-3.5 py-1.5 rounded-full text-xs font-semibold hover:bg-white/15 transition"
+    >
+      Ch. 3 • 5 PM
+    </a>
+  </nav>
+
+  <!-- ===================================================================== -->
+  <!-- SLIDE-OVER CUSTOMIZE SCENE IMAGES DRAWER                              -->
+  <!-- ===================================================================== -->
+  <div
+    id="customizer-backdrop"
+    class="fixed inset-0 z-50 bg-ghibli-ink/55 backdrop-blur-xs hidden opacity-0"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    id="customizer-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-heading"
+    class="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl border-l border-ghibli-rose flex flex-col translate-x-full"
+  >
+    <div class="px-5 py-4 border-b border-ghibli-rose bg-ghibli-blush/70 flex items-center justify-between gap-2">
+      <div>
+        <h2 id="drawer-heading" class="font-display text-xl font-bold text-ghibli-ink">
+          Customize Scene Images
+        </h2>
+        <p class="text-xs text-ghibli-muted">
+          Upload .png/.jpg files for each scene, then download a single standalone HTML file!
+        </p>
+      </div>
+      <button
+        type="button"
+        id="close-drawer-btn"
+        class="w-9 h-9 rounded-full bg-white border border-ghibli-rose text-ghibli-ink font-bold flex items-center justify-center hover:bg-ghibli-rose/40 cursor-pointer shrink-0"
+        aria-label="Close drawer"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div id="drawer-scene-list" class="drawer-scroll flex-1 overflow-y-auto p-4 space-y-3"></div>
+
+    <div class="p-4 border-t border-ghibli-rose bg-ghibli-cream flex flex-wrap items-center justify-between gap-2">
+      <button
+        type="button"
+        id="reset-all-images-btn"
+        class="text-xs font-semibold text-ghibli-deep hover:underline px-2.5 py-2 cursor-pointer"
+      >
+        Reset All
+      </button>
+      <button
+        type="button"
+        id="download-standalone-btn"
+        class="flex-1 sm:flex-initial bg-gradient-to-r from-ghibli-coral to-ghibli-deep hover:opacity-95 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-md transition cursor-pointer"
+      >
+        ⬇️ Download Standalone HTML
+      </button>
+    </div>
+  </aside>
+
+  <script>
+    /**
+     * =========================================================================
+     * 1. BAKED-IN CUSTOM IMAGES OBJECT (Automatically populated on export)
+     * =========================================================================
+     */
+    const BAKED_SCENE_IMAGES = {};
+
+    /**
+     * =========================================================================
+     * 2. COMPLETE STORY SCRIPT DATA (Exact Dialogues & Thought Bubbles)
+     * =========================================================================
+     */
+    const SCENES = [
+      // --- CHAPTER 1: MORNING (1A – 2C) ---
+      {
+        id: '1A',
+        chapter: 'ch1',
+        badge: 'Scene 1A • The Doorway',
+        title: 'A Polite Namaste at Monika’s Door',
+        caption:
+          'Monika (early 20s, salwar suit) stands inside on the right with folded hands; Papa (Ashok ji) and two friends stand on the left landing.',
+        palette: ['#FFE9EC', '#FFF6E5'],
+        emoji: '🙏🚪',
+        bubbles: [
+          { kind: 'speech', speaker: 'Father (Ashok ji)', text: 'Where is your father?' },
+          { kind: 'speech', speaker: 'Monika', text: 'My father is out of town.' },
+        ],
+      },
+      {
+        id: '1B',
+        chapter: 'ch1',
+        badge: 'Scene 1B • First Impression',
+        title: 'Accepting the Invitation Card',
+        caption:
+          'Monika accepts the wedding invitation card with both hands as Papa notices her warmth and grace.',
+        palette: ['#FFF2DF', '#FFE8EC'],
+        emoji: '💌✨',
+        bubbles: [
+          {
+            kind: 'thought',
+            speaker: 'Father (Thought)',
+            text: 'She looks beautiful and well-cultured. She is perfect for my Sachin.',
+          },
+        ],
+      },
+      {
+        id: '2A',
+        chapter: 'ch1',
+        badge: 'Scene 2A • Back Home',
+        title: 'Papa Returns Home with Good News',
+        caption:
+          '1st floor of Sachin’s home (stairs on left, kitchen ahead, Maharana Pratap painting on right wall) with all 6 family members and 1-year-old nephew crawling.',
+        palette: ['#FDE6E9', '#FFF5E4'],
+        emoji: '🏠👨‍👩‍👧‍👦',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Father',
+            text: 'Listen everyone! Today I went to deliver an invitation and saw a wonderful, cultured girl. She is the perfect match for our Sachin!',
+          },
+          { kind: 'speech', speaker: 'Mother', text: 'Really?' },
+        ],
+      },
+      {
+        id: '2B',
+        chapter: 'ch1',
+        badge: 'Scene 2B • The 10th May Hint',
+        title: 'Family Excitement & Wedding Bells',
+        caption:
+          'Brother & Bhabhi tease Sachin while Papa shares that her family might attend their relative’s wedding on 10th May.',
+        palette: ['#FFF4E2', '#FCE7EB'],
+        emoji: '🔔💭',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Brother & Bhabhi',
+            text: "Looks like Sachin's wedding bells are finally ringing!",
+          },
+          {
+            kind: 'speech',
+            speaker: 'Father',
+            text: "Her family might attend our relative's wedding on 10th May. You can see her there, Sachin!",
+          },
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: '10th May... I wonder what she looks like.',
+          },
+        ],
+      },
+      {
+        id: '2C',
+        chapter: 'ch1',
+        badge: 'Scene 2C • 10 May 2023',
+        title: 'Seeing Each Other for the First Time',
+        caption:
+          'At the festive 10 May 2023 wedding venue, Papa gestures gently toward Monika across the hall and your eyes meet.',
+        palette: ['#FFE5EA', '#FFF2DC'],
+        emoji: '✨👀',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Father',
+            text: 'Look over there, Sachin... she is the girl I was telling you about.',
+          },
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: 'She really is beautiful...',
+          },
+        ],
+      },
+
+      // --- CHAPTER 2: 1:00 PM SPIN WHEEL UNLOCK (3A-1 – 5B-2) ---
+      {
+        id: '3A-1',
+        chapter: 'ch2',
+        badge: 'Scene 3A-1 • Morning Tea & Call',
+        title: 'Calling... Narendra Verma Ji',
+        caption:
+          'Morning sunlight at Sachin’s home—Papa holds tea and his smartphone showing "Calling... Narendra Verma Ji".',
+        palette: ['#FFF6E3', '#FDE9EC'],
+        emoji: '☕📱',
+        bubbles: [
+          { kind: 'speech', speaker: 'Mobile Screen', text: 'Calling... Narendra Verma Ji' },
+        ],
+      },
+      {
+        id: '3A-2',
+        chapter: 'ch2',
+        badge: 'Scene 3A-2 • The Proposal Call',
+        title: 'Ashok Ji Speaks to Verma Ji',
+        caption:
+          'Papa holds the phone to his ear with a warm, hopeful smile during the morning call.',
+        palette: ['#FCE7EB', '#FFF5E5'],
+        emoji: '📞😊',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Ashok ji',
+            text: 'Hi Verma ji, I was thinking of making Monika our bahu. What do you say?',
+          },
+        ],
+      },
+      {
+        id: '3A-3',
+        chapter: 'ch2',
+        badge: 'Scene 3A-3 • Verma Ji’s Reply',
+        title: 'Morning Tea, Newspaper & Warm Yes',
+        caption:
+          'Narendra Verma ji enjoys morning tea and reads the newspaper at home while answering Ashok ji’s call.',
+        palette: ['#FFF3E0', '#FDE8EC'],
+        emoji: '📰☕',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Narendra Verma ji',
+            text: 'Ashok ji, I was thinking the same! Come over to our place to take the wedding talks forward.',
+          },
+        ],
+      },
+      {
+        id: '3B-1',
+        chapter: 'ch2',
+        badge: 'Scene 3B-1 • Family Visit',
+        title: 'Welcoming Sachin’s Full Family',
+        caption:
+          'Monika’s family welcomes Sachin’s full family (Sachin in navy blue & light grey formals; Monika is inside the kitchen).',
+        palette: ['#FDE8EC', '#FFF6E6'],
+        emoji: '🏡💐',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: "Monika's Mother",
+            text: 'Welcome everyone, please sit down.',
+          },
+        ],
+      },
+      {
+        id: '3B-2',
+        chapter: 'ch2',
+        badge: 'Scene 3B-2 • The Tea Tray',
+        title: 'Shy Glance & Cup of Tea',
+        caption:
+          'Monika (messy high bun with wavy strands framing her face) looks shyly down at the tea tray as Sachin picks up a cup and looks affectionately at her.',
+        palette: ['#FFF2E2', '#FCE6EA'],
+        emoji: '🍵💓',
+        bubbles: [],
+      },
+      {
+        id: '3C-1',
+        chapter: 'ch2',
+        badge: 'Scene 3C-1 • Terrace Talk',
+        title: 'Stepping Aside on the Terrace',
+        caption:
+          'On Monika’s terrace, Sachin’s brother and Monika’s 70-year-old Nani step aside so you two can talk freely.',
+        palette: ['#FCE9EC', '#FFF6E5'],
+        emoji: '🌤️🌿',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: "Sachin's Brother / Nani",
+            text: 'Go ahead, you two talk for a bit.',
+          },
+        ],
+      },
+      {
+        id: '3C-2',
+        chapter: 'ch2',
+        badge: 'Scene 3C-2 • Terrace Smile',
+        title: 'Talking Happily Together',
+        caption:
+          'Sachin and Monika share warm smiles and an easy, heartfelt conversation on the terrace.',
+        palette: ['#FFF4E4', '#FDE7EB'],
+        emoji: '😊💬',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Sachin',
+            text: "I'm really glad we got a chance to talk.",
+          },
+          {
+            kind: 'speech',
+            speaker: 'Monika',
+            text: 'Me too, it feels nice talking to you.',
+          },
+        ],
+      },
+      {
+        id: '3C-3',
+        chapter: 'ch2',
+        badge: 'Scene 3C-3 • Heading Home',
+        title: 'Bye Bye from Afar',
+        caption:
+          'Sachin’s full family sits in the car ready to head home while Monika and Sachin wave goodbye from a distance.',
+        palette: ['#FDE8EC', '#FFF5E5'],
+        emoji: '🚗👋',
+        bubbles: [
+          { kind: 'speech', speaker: 'Monika & Sachin', text: 'Bye bye!' },
+        ],
+      },
+      {
+        id: '3D-1',
+        chapter: 'ch2',
+        badge: 'Scene 3D-1 • Same-Day Question',
+        title: 'Sudden Wedding Pressure',
+        caption:
+          'Back home, Papa asks Sachin for an immediate decision as Monika’s family asks about a same-day wedding.',
+        palette: ['#FFF3E1', '#FCE7EB'],
+        emoji: '⏳😟',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Father',
+            text: 'Her family is asking—do you like her and are you ready for the wedding today?',
+          },
+        ],
+      },
+      {
+        id: '3D-2',
+        chapter: 'ch2',
+        badge: 'Scene 3D-2 • The Hasty "No"',
+        title: 'Overwhelmed in the Moment',
+        caption:
+          'Caught off guard by the sudden pressure to decide on the spot, Sachin hesitates.',
+        palette: ['#FCE8EC', '#FFF5E6'],
+        emoji: '😔💭',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Sachin',
+            text: "Right now... no, I can't decide so fast.",
+          },
+        ],
+      },
+      {
+        id: '3D-3',
+        chapter: 'ch2',
+        badge: 'Scene 3D-3 • Quiet Regret',
+        title: 'Wishing He Hadn’t Rushed',
+        caption:
+          'Alone at home, Sachin reflects on how quickly he said no under pressure.',
+        palette: ['#FFF4E4', '#FDE9EC'],
+        emoji: '🌧️💭',
+        bubbles: [
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: 'Why did I say no so quickly under pressure...?',
+          },
+        ],
+      },
+      {
+        id: '4A-1',
+        chapter: 'ch2',
+        badge: 'Scene 4A-1 • Instagram Comeback',
+        title: 'A Follow Request Changes Everything',
+        caption:
+          'Monika’s Instagram follow request pops up on Sachin’s phone screen.',
+        palette: ['#FDE7EC', '#FFF5E4'],
+        emoji: '📲✨',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Phone Notification',
+            text: 'Monika sent you a follow request.',
+          },
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: 'She sent a request... let me accept it.',
+          },
+        ],
+      },
+      {
+        id: '4A-2a',
+        chapter: 'ch2',
+        badge: 'Scene 4A-2a • Story Reaction',
+        title: 'Sending an Emoji on Her Story',
+        caption:
+          'Sachin views Monika’s story/status and taps to send an emoji reaction.',
+        palette: ['#FFF3E1', '#FCE8EC'],
+        emoji: '😍📱',
+        bubbles: [
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: 'Let me send a quick emoji on her story...',
+          },
+        ],
+      },
+      {
+        id: '4A-2b',
+        chapter: 'ch2',
+        badge: 'Scene 4A-2b • She Replied!',
+        title: 'Her Message Lights Up the Screen',
+        caption:
+          'Monika replies to Sachin’s reaction and brings an instant smile to his face.',
+        palette: ['#FCE7EB', '#FFF6E5'],
+        emoji: '💬😊',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Monika (Chat)',
+            text: 'Hey! Thanks for reacting 😊',
+          },
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: 'She actually replied!',
+          },
+        ],
+      },
+      {
+        id: '4A-2c',
+        chapter: 'ch2',
+        badge: 'Scene 4A-2c • Night Chats (Sachin)',
+        title: 'A Whole Month of Late-Night Talks',
+        caption:
+          'Warm bedside lamp glow as Sachin chats happily into the night over a month of daily conversations.',
+        palette: ['#FFF2E0', '#FDE7EB'],
+        emoji: '🌙💬',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Sachin (Chat)',
+            text: 'Staying up late talking to you has become my favorite part of the day.',
+          },
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: 'One emoji reply turned into a whole month of talking—and I really like her.',
+          },
+        ],
+      },
+      {
+        id: '4A-2d',
+        chapter: 'ch2',
+        badge: 'Scene 4A-2d • Night Chats (Monika)',
+        title: 'Gud Ny8 — Monika’s Side',
+        caption:
+          'Cozy nighttime lamp light at Monika’s home as she sends "Gud Ny8" with a happy heart.',
+        palette: ['#FDE8EC', '#FFF4E3'],
+        emoji: '🌟💤',
+        bubbles: [
+          { kind: 'speech', speaker: 'Monika (Chat)', text: 'Gud Ny8' },
+          {
+            kind: 'thought',
+            speaker: 'Monika (Thought)',
+            text: 'Talking to him every night feels so easy and nice.',
+          },
+        ],
+      },
+      {
+        id: '4B',
+        chapter: 'ch2',
+        badge: 'Scene 4B • Heart Is Sure',
+        title: 'Telling Father After a Month',
+        caption:
+          'With complete clarity after a month of talking, Sachin tells Papa he is ready for marriage.',
+        palette: ['#FFF5E5', '#FCE8EC'],
+        emoji: '💍🤝',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Sachin',
+            text: "Dad, we've been talking for a month and I really like her now. I'm ready for marriage—please talk to her family.",
+          },
+          {
+            kind: 'speech',
+            speaker: 'Father',
+            text: "If your heart is sure now, I'll talk to her family right away!",
+          },
+        ],
+      },
+      {
+        id: '5A-1',
+        chapter: 'ch2',
+        badge: 'Scene 5A-1 • 27 Aug 2023',
+        title: 'Bike Ride & Temple Blessings',
+        caption:
+          'Sachin and Monika ride together on his bike and visit a peaceful temple on 27 August 2023.',
+        palette: ['#FCE7EB', '#FFF3E0'],
+        emoji: '🏍️🛕',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Monika',
+            text: 'Everything feels so peaceful with you.',
+          },
+        ],
+      },
+      {
+        id: '5A-2',
+        chapter: 'ch2',
+        badge: 'Scene 5A-2 • Regional Park',
+        title: 'Strolling Together at Regional Park',
+        caption:
+          'Walking side by side along the greenery of Regional Park on 27 August 2023.',
+        palette: ['#FFF4E3', '#FDE8EC'],
+        emoji: '🌳☀️',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Sachin',
+            text: "I've been waiting for a day just like this with you.",
+          },
+        ],
+      },
+      {
+        id: '5B-1',
+        chapter: 'ch2',
+        badge: 'Scene 5B-1 • The Watch Gift',
+        title: 'A Watch for Every Moment Together',
+        caption:
+          'At Regional Park on 27 Aug 2023, Sachin presents Monika with a wristwatch gift box.',
+        palette: ['#FDE7EC', '#FFF5E5'],
+        emoji: '⌚🎁',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Sachin',
+            text: 'This watch is for every moment we share.',
+          },
+        ],
+      },
+      {
+        id: '5B-2',
+        chapter: 'ch2',
+        badge: 'Scene 5B-2 • Sweetest Smile',
+        title: 'Monika’s Happy Reaction',
+        caption:
+          'Monika smiles brightly as she receives the wristwatch gift.',
+        palette: ['#FFF3E1', '#FCE7EB'],
+        emoji: '🥰⌚',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Monika',
+            text: "It's so thoughtful—I love it! Thank you.",
+          },
+        ],
+      },
+
+      // --- CHAPTER 3: 5:00 PM GOLD SCRATCH CARD UNLOCK (6B-2, 6C-1 & 7) ---
+      {
+        id: '6B-2',
+        chapter: 'ch3',
+        badge: 'Scene 6B-2 • 28 Jan 2024',
+        title: 'Roka Ceremony — Saree & Churi',
+        caption:
+          'Both families gather joyfully on 28 January 2024 for the Roka ceremony, gifting Monika saree and churi.',
+        palette: ['#FCE7EB', '#FFF4E2'],
+        emoji: '🧣✨',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Father / Family',
+            text: 'With saree and churi, our bond is official now!',
+          },
+        ],
+      },
+      {
+        id: '6C-1',
+        chapter: 'ch3',
+        badge: 'Scene 6C-1 • 24 April 2024',
+        title: 'The Wedding Day',
+        caption:
+          'Grand Indian wedding celebration on 24 April 2024 with Sachin and Monika as bride and groom.',
+        palette: ['#FFF3E0', '#FDE7EB'],
+        emoji: '👰🤵',
+        bubbles: [
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: '24 April 2024—the day my dream came true.',
+          },
+        ],
+      },
+      {
+        id: '7A-1',
+        chapter: 'ch3',
+        badge: 'Scene 7A-1 • 4 September 2025',
+        title: 'Arrival of Baby Rishvik',
+        caption:
+          'A tender, emotional moment on 4 September 2025 as Monika holds newborn baby Rishvik and Sachin looks on in awe.',
+        palette: ['#FDE8EC', '#FFF6E6'],
+        emoji: '👶💖',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Monika',
+            text: 'Our little blessing has arrived—Rishvik.',
+          },
+          {
+            kind: 'speech',
+            speaker: 'Sachin',
+            text: 'Welcome to our arms, my son.',
+          },
+        ],
+      },
+      {
+        id: '7A-2',
+        chapter: 'ch3',
+        badge: 'Scene 7A-2 • 14 Months of Joy',
+        title: 'Our Cheerful Little Boy',
+        caption:
+          'Sachin, Monika, and 14-month-old Rishvik (black t-shirt & small black tikka) smiling and playing together.',
+        palette: ['#FFF4E4', '#FCE7EB'],
+        emoji: '🧸🌟',
+        bubbles: [
+          {
+            kind: 'thought',
+            speaker: 'Sachin (Thought)',
+            text: 'Watching him grow into our cheerful little boy is the greatest gift.',
+          },
+        ],
+      },
+      {
+        id: '7B',
+        chapter: 'ch3',
+        badge: 'Scene 7B • 22 November Finale',
+        title: 'Happy Birthday, Monu!',
+        caption:
+          'Warm birthday celebration with Sachin, Monika, and little Rishvik surrounded by golden fairy lights.',
+        palette: ['#FCE7EB', '#FFF3DF'],
+        emoji: '🎂🥂',
+        bubbles: [
+          {
+            kind: 'speech',
+            speaker: 'Sachin',
+            text: 'Happy Birthday, Monu! Thank you for making every day so special.',
+          },
+          {
+            kind: 'thought',
+            speaker: 'Monika (Thought)',
+            text: 'The best birthday surprise ever—I love you so much.',
+          },
+        ],
+      },
+    ];
+
+    /**
+     * =========================================================================
+     * 3. IST TIME-LOCKS & PERSISTENT STATE
+     * =========================================================================
+     */
+    const TARGET_1PM_IST = new Date('2026-11-22T13:00:00+05:30').getTime();
+    const TARGET_5PM_IST = new Date('2026-11-22T17:00:00+05:30').getTime();
+
+    const STORAGE_KEYS = {
+      images: 'monu_webtoon_2026_images',
+      envelope: 'monu_webtoon_2026_envelope',
+      wheel: 'monu_webtoon_2026_wheel',
+      scratch: 'monu_webtoon_2026_scratch',
+    };
+
+    const state = {
+      testMode: false,
+      envelopeOpened: false,
+      wheelSpun: false,
+      wheelSpinning: false,
+      wheelAngle: 0,
+      scratchRevealed: false,
+      customImages: Object.assign({}, BAKED_SCENE_IMAGES),
+    };
+
+    // Safe HTML escaping helpers
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Toast notification helper
+    let toastTimeout = null;
+    function notify(msg) {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-text').textContent = msg;
+      gsap.to(banner, {
+        opacity: 1,
+        y: 0,
+        duration: 0.35,
+        ease: 'power3.out',
+        pointerEvents: 'auto',
+      });
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        gsap.to(banner, {
+          opacity: 0,
+          y: -16,
+          duration: 0.3,
+          ease: 'power2.in',
+          pointerEvents: 'none',
+        });
+      }, 3400);
+    }
+
+    // Celebratory Confetti Helper (canvas-confetti)
+    function fireConfetti(big = false) {
+      if (typeof confetti !== 'function') return;
+      const colors = ['#E05A6D', '#D4A24C', '#F6DF9F', '#FAD2D8', '#9F2B3F'];
+      confetti({
+        particleCount: big ? 95 : 55,
+        spread: big ? 80 : 62,
+        origin: { y: 0.62 },
+        colors,
+      });
+    }
+
+    // Load saved progress & custom images
+    function hydrateState() {
+      try {
+        const savedImgs = localStorage.getItem(STORAGE_KEYS.images);
+        if (savedImgs) {
+          state.customImages = Object.assign({}, BAKED_SCENE_IMAGES, JSON.parse(savedImgs));
+        }
+        state.envelopeOpened = localStorage.getItem(STORAGE_KEYS.envelope) === 'true';
+        state.wheelSpun = localStorage.getItem(STORAGE_KEYS.wheel) === 'true';
+        state.scratchRevealed = localStorage.getItem(STORAGE_KEYS.scratch) === 'true';
+      } catch (e) {
+        console.warn('Storage unavailable:', e);
+      }
+    }
+
+    function saveCustomImages() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.images, JSON.stringify(state.customImages));
+      } catch (e) {
+        notify('Storage full—use "Download Standalone HTML" to save all images permanently!');
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 4. ILLUSTRATED GHIBLI-WEBTOON SVG PLACEHOLDER & PANEL RENDERING
+     * =========================================================================
+     */
+    function buildGhibliPlaceholderSvg(scene) {
+      const [c1, c2] = scene.palette || ['#FFE9EC', '#FFF6E5'];
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 900" width="720" height="900">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${c1}"/>
+            <stop offset="100%" stop-color="${c2}"/>
+          </linearGradient>
+          <radialGradient id="sun" cx="50%" cy="32%" r="45%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="720" height="900" fill="url(#bg)"/>
+        <circle cx="360" cy="300" r="280" fill="url(#sun)"/>
+        <!-- Soft Ghibli Clouds -->
+        <g fill="#FFFFFF" opacity="0.65">
+          <ellipse cx="160" cy="180" rx="90" ry="32"/>
+          <ellipse cx="215" cy="172" rx="65" ry="28"/>
+          <ellipse cx="550" cy="230" rx="95" ry="30"/>
+          <ellipse cx="500" cy="222" rx="60" ry="26"/>
+        </g>
+        <!-- Decorative Gold Frame -->
+        <rect x="34" y="34" width="652" height="832" rx="28" fill="none" stroke="#D4A24C" stroke-width="2.5" stroke-dasharray="10 8" opacity="0.7"/>
+        <!-- Center Emblem Circle -->
+        <circle cx="360" cy="370" r="96" fill="#FFFFFF" stroke="#FAD2D8" stroke-width="4"/>
+        <text x="360" y="392" font-size="68" text-anchor="middle">${scene.emoji || '✨'}</text>
+        <!-- Scene Label -->
+        <text x="360" y="530" font-family="Georgia, serif" font-weight="bold" font-size="30" fill="#2E1A1E" text-anchor="middle">${scene.badge}</text>
+        <text x="360" y="575" font-family="sans-serif" font-size="21" fill="#6E4F55" text-anchor="middle">${scene.title}</text>
+        <rect x="195" y="625" width="330" height="46" rx="23" fill="#FFFFFF" stroke="#E05A6D" stroke-width="1.8"/>
+        <text x="360" y="654" font-family="sans-serif" font-weight="bold" font-size="16" fill="#9F2B3F" text-anchor="middle">Tap "Customize Images" to add artwork</text>
+      </svg>`;
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
+    function createSceneCardElement(scene) {
+      const article = document.createElement('article');
+      article.className =
+        'webtoon-card bg-white/95 backdrop-blur-sm rounded-3xl overflow-hidden border border-ghibli-rose/90 shadow-lg';
+
+      const customSrc = state.customImages[scene.id];
+      const fallbackSrc = buildGhibliPlaceholderSvg(scene);
+      const displaySrc = customSrc || fallbackSrc;
+
+      let bubblesMarkup = '';
+      if (scene.bubbles && scene.bubbles.length > 0) {
+        bubblesMarkup = `<div class="mt-4 space-y-3.5">`;
+        scene.bubbles.forEach((b) => {
+          if (b.kind === 'thought') {
+            bubblesMarkup += `
+              <div class="bubble-item webtoon-thought">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-ghibli-coral mb-0.5">
+                  💭 ${escHtml(b.speaker)}
+                </div>
+                <p class="font-bubble text-xl sm:text-[22px] text-ghibli-ink leading-snug">
+                  “${escHtml(b.text)}”
+                </p>
+              </div>
+            `;
+          } else {
+            bubblesMarkup += `
+              <div class="bubble-item webtoon-speech">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-ghibli-muted mb-0.5">
+                  💬 ${escHtml(b.speaker)}
+                </div>
+                <p class="font-bubble text-lg sm:text-xl text-ghibli-ink leading-snug">
+                  “${escHtml(b.text)}”
+                </p>
+              </div>
+            `;
+          }
+        });
+        bubblesMarkup += `</div>`;
+      } else {
+        bubblesMarkup = `
+          <div class="bubble-item mt-3 text-xs italic text-ghibli-muted bg-ghibli-blush/60 rounded-2xl px-3.5 py-2.5 border border-ghibli-rose/60">
+            Silent webtoon beat — pure emotion, no dialogue bubbles.
+          </div>
+        `;
+      }
+
+      article.innerHTML = `
+        <div class="px-4 pt-4 pb-2.5 flex items-center justify-between gap-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-ghibli-deep bg-ghibli-blush px-3 py-1 rounded-full">
+            ${escHtml(scene.badge)}
+          </span>
+          <button
+            type="button"
+            data-swap-scene="${escHtml(scene.id)}"
+            class="swap-art-btn text-xs font-semibold text-ghibli-muted hover:text-ghibli-deep px-2.5 py-1 rounded-xl hover:bg-ghibli-blush transition cursor-pointer"
+          >
+            🖼️ Swap Art
+          </button>
+        </div>
+
+        <div class="px-4 pb-3">
+          <h3 class="font-display text-lg sm:text-xl font-bold text-ghibli-ink">
+            ${escHtml(scene.title)}
+          </h3>
+          <p class="text-xs text-ghibli-muted mt-0.5 leading-relaxed">
+            ${escHtml(scene.caption)}
+          </p>
+        </div>
+
+        <div class="art-frame relative overflow-hidden bg-ghibli-blush/40 border-y border-ghibli-rose/50">
+          <img
+            src="${escHtml(displaySrc)}"
+            alt="${escHtml(scene.title)}"
+            class="art-parallax-img w-full max-h-[460px] object-cover object-center block will-change-transform"
+          />
+        </div>
+
+        <div class="p-4 pt-1.5">
+          ${bubblesMarkup}
+        </div>
+      `;
+
+      const imgEl = article.querySelector('img');
+      imgEl.onerror = () => {
+        imgEl.onerror = null;
+        imgEl.src = fallbackSrc;
+      };
+
+      article.querySelector('.swap-art-btn').addEventListener('click', () => {
+        openDrawer(scene.id);
+      });
+
+      return article;
+    }
+
+    function renderAllChapters() {
+      const ch1Box = document.getElementById('panels-ch1');
+      const ch2Box = document.getElementById('panels-ch2');
+      const ch3Box = document.getElementById('panels-ch3');
+
+      ch1Box.innerHTML = '';
+      ch2Box.innerHTML = '';
+      ch3Box.innerHTML = '';
+
+      SCENES.forEach((scene) => {
+        const card = createSceneCardElement(scene);
+        if (scene.chapter === 'ch1') ch1Box.appendChild(card);
+        else if (scene.chapter === 'ch2') ch2Box.appendChild(card);
+        else ch3Box.appendChild(card);
+      });
+
+      setupScrollAnimations();
+    }
+
+    /**
+     * =========================================================================
+     * 5. GSAP + SCROLLTRIGGER CINEMA CHOREOGRAPHY
+     * =========================================================================
+     */
+    gsap.registerPlugin(ScrollTrigger);
+
+    function runOpeningEntranceTimeline() {
+      // Create ambient drifting sakura/gold particles first (kept subtle)
+      spawnAmbientParticles();
+
+      const tl = gsap.timeline({
+        defaults: { ease: 'power4.out' },
+      });
+
+      // Step 0: Pure blank white screen (#FFFFFF) for 0.5 seconds
+      tl.to({}, { duration: 0.5 })
+
+        // Step a: Warm golden-blush radial bloom expands smoothly across the white canvas
+        .fromTo(
+          '#opening-backdrop',
+          { opacity: 0, scale: 0.88 },
+          { opacity: 1, scale: 1, duration: 1.15, ease: 'power2.out' }
+        )
+
+        // Step b: Ambient particles fade in gently
+        .fromTo(
+          '.ambient-petal',
+          { opacity: 0 },
+          { opacity: 0.72, duration: 0.8, stagger: 0.04 },
+          '-=0.85'
+        )
+
+        // Step c: Top header bar glides down smoothly
+        .fromTo(
+          '#top-header-bar',
+          { autoAlpha: 0, y: -30 },
+          { autoAlpha: 1, y: 0, duration: 0.75, ease: 'power3.out' },
+          '-=0.7'
+        )
+
+        // Step d: Hero date badge, main title ("Happy Birthday, Monu"), and subtitle stagger in
+        .fromTo(
+          '#hero-date-badge',
+          { autoAlpha: 0, y: 18, scale: 0.92 },
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.65, ease: 'back.out(1.6)' },
+          '-=0.45'
+        )
+        .fromTo(
+          '#hero-main-title',
+          { autoAlpha: 0, y: 26, letterSpacing: '0.08em' },
+          {
+            autoAlpha: 1,
+            y: 0,
+            letterSpacing: '-0.01em',
+            duration: 0.95,
+            ease: 'power4.out',
+          },
+          '-=0.45'
+        )
+        .fromTo(
+          '#hero-subtitle',
+          { autoAlpha: 0, y: 18 },
+          { autoAlpha: 1, y: 0, duration: 0.75, ease: 'power3.out' },
+          '-=0.65'
+        )
+
+        // Step e: Interactive Clue #1 Envelope rises with soft 3D perspective tilt + idle float
+        .fromTo(
+          '#hero-envelope-wrap',
+          { autoAlpha: 0, y: 38, rotationX: 14, scale: 0.94 },
+          {
+            autoAlpha: 1,
+            y: 0,
+            rotationX: 0,
+            scale: 1,
+            duration: 0.9,
+            ease: 'back.out(1.4)',
+            onComplete: () => {
+              // Gentle idle floating motion on the envelope
+              gsap.to('#clue-envelope', {
+                y: -6,
+                duration: 2.4,
+                repeat: -1,
+                yoyo: true,
+                ease: 'sine.inOut',
+              });
+            },
+          },
+          '-=0.55'
+        )
+
+        // Reveal bottom quick-jump pill bar
+        .fromTo(
+          '#quick-jump-bar',
+          { autoAlpha: 0, y: 28 },
+          { autoAlpha: 1, y: 0, duration: 0.65, ease: 'power3.out' },
+          '-=0.5'
+        );
+    }
+
+    function spawnAmbientParticles() {
+      const container = document.getElementById('ambient-particles');
+      const symbols = ['🌸', '✨', '❤️', '🌼', '💕'];
+      for (let i = 0; i < 16; i++) {
+        const el = document.createElement('span');
+        el.className = 'ambient-petal';
+        el.textContent = symbols[i % symbols.length];
+        el.style.left = `${(i * 6.4) % 95}%`;
+        el.style.top = '102vh';
+        el.style.fontSize = `${12 + (i % 4) * 4}px`;
+        container.appendChild(el);
+
+        const duration = 10 + (i % 6) * 2.2;
+        gsap.to(el, {
+          y: `-${window.innerHeight + 160}px`,
+          x: i % 2 === 0 ? 24 : -24,
+          rotation: i % 2 === 0 ? 25 : -25,
+          duration,
+          repeat: -1,
+          delay: -(i * 1.1),
+          ease: 'none',
+        });
+      }
+    }
+
+    function setupScrollAnimations() {
+      // Clear previous ScrollTriggers on webtoon cards before re-binding
+      ScrollTrigger.getAll().forEach((st) => {
+        if (st.vars && st.vars.id === 'webtoon-card-st') st.kill();
+      });
+
+      const cards = gsap.utils.toArray('.webtoon-card');
+      cards.forEach((card) => {
+        // Skip hidden parent chapters until unlocked
+        if (card.closest('.hidden')) return;
+
+        const bubbles = card.querySelectorAll('.bubble-item');
+        const img = card.querySelector('.art-parallax-img');
+
+        gsap.set(card, { opacity: 0, y: 45, scale: 0.94, rotationX: 4 });
+        if (bubbles.length) {
+          gsap.set(bubbles, { opacity: 0, scale: 0.82, y: 14 });
+        }
+
+        const cardTl = gsap.timeline({
+          scrollTrigger: {
+            id: 'webtoon-card-st',
+            trigger: card,
+            start: 'top 86%',
+            once: true,
+          },
+        });
+
+        cardTl.to(card, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          rotationX: 0,
+          duration: 0.72,
+          ease: 'power3.out',
+        });
+
+        if (bubbles.length) {
+          cardTl.to(
+            bubbles,
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.55,
+              stagger: 0.16,
+              ease: 'back.out(1.7)',
+            },
+            '-=0.32'
+          );
+        }
+
+        // Subtle parallax depth on panel artwork frame
+        if (img) {
+          gsap.fromTo(
+            img,
+            { yPercent: -4, scale: 1.05 },
+            {
+              yPercent: 4,
+              scale: 1.05,
+              ease: 'none',
+              scrollTrigger: {
+                id: 'webtoon-card-st',
+                trigger: card,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: 0.6,
+              },
+            }
+          );
+        }
+      });
+
+      ScrollTrigger.refresh();
+    }
+
+    // Top reading progress bar + magnetic hover micro-interactions
+    function setupGlobalMicroInteractions() {
+      window.addEventListener(
+        'scroll',
+        () => {
+          const docHeight =
+            document.documentElement.scrollHeight - window.innerHeight;
+          const pct = docHeight > 0 ? Math.min(100, (window.scrollY / docHeight) * 100) : 0;
+          gsap.to('#reading-progress-bar', {
+            width: `${pct}%`,
+            duration: 0.15,
+            ease: 'none',
+          });
+        },
+        { passive: true }
+      );
+
+      document.querySelectorAll('.magnetic-btn').forEach((btn) => {
+        btn.addEventListener('mousemove', (e) => {
+          const rect = btn.getBoundingClientRect();
+          const dx = (e.clientX - (rect.left + rect.width / 2)) * 0.18;
+          const dy = (e.clientY - (rect.top + rect.height / 2)) * 0.18;
+          gsap.to(btn, { x: dx, y: dy, duration: 0.25, ease: 'power2.out' });
+        });
+        btn.addEventListener('mouseleave', () => {
+          gsap.to(btn, { x: 0, y: 0, duration: 0.4, ease: 'elastic.out(1, 0.5)' });
+        });
+      });
+    }
+
+    /**
+     * =========================================================================
+     * 6. CHAPTER 1: 3D WAX-SEAL ENVELOPE OPENING (GSAP)
+     * =========================================================================
+     */
+    function openEnvelope(instant = false) {
+      if (state.envelopeOpened && !instant) return;
+      state.envelopeOpened = true;
+      try {
+        localStorage.setItem(STORAGE_KEYS.envelope, 'true');
+      } catch (e) {}
+
+      const envelopeEl = document.getElementById('clue-envelope');
+      envelopeEl.setAttribute('aria-expanded', 'true');
+      gsap.killTweensOf(envelopeEl);
+
+      const flap = document.getElementById('envelope-flap');
+      const closedView = document.getElementById('envelope-closed-view');
+      const openedView = document.getElementById('envelope-opened-view');
+      const liftedCard = document.getElementById('clue-lifted-card');
+
+      if (instant) {
+        gsap.set(flap, { rotationX: 180, opacity: 0.25 });
+        closedView.classList.add('hidden');
+        openedView.classList.remove('hidden');
+        return;
+      }
+
+      const tl = gsap.timeline();
+      tl.to('#wax-seal-btn', {
+        scale: 1.25,
+        rotation: 15,
+        duration: 0.25,
+        ease: 'back.out(2)',
+      })
+        .to(flap, {
+          rotationX: 180,
+          opacity: 0.2,
+          duration: 0.55,
+          ease: 'power3.inOut',
+        })
+        .to(
+          closedView,
+          {
+            opacity: 0,
+            y: -10,
+            duration: 0.25,
+            onComplete: () => {
+              closedView.classList.add('hidden');
+              openedView.classList.remove('hidden');
+            },
+          },
+          '-=0.2'
+        )
+        .fromTo(
+          liftedCard,
+          { opacity: 0, y: 36, scale: 0.9 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.65,
+            ease: 'back.out(1.6)',
+            onComplete: () => {
+              fireConfetti(true);
+              notify('🔑 Clue #1 Revealed: Look inside your dressing table drawer!');
+            },
+          }
+        );
+    }
+
+    /**
+     * =========================================================================
+     * 7. CHAPTER 2: 1:00 PM IST COUNTDOWN & GSAP INERTIA SPIN WHEEL
+     * =========================================================================
+     */
+    function is1PmUnlocked() {
+      return state.testMode || Date.now() >= TARGET_1PM_IST;
+    }
+
+    function is5PmUnlocked() {
+      return state.testMode || Date.now() >= TARGET_5PM_IST;
+    }
+
+    function getCountdownParts(targetMs) {
+      const rem = Math.max(0, targetMs - Date.now());
+      return {
+        d: String(Math.floor(rem / 86400000)).padStart(2, '0'),
+        h: String(Math.floor((rem / 3600000) % 24)).padStart(2, '0'),
+        m: String(Math.floor((rem / 60000) % 60)).padStart(2, '0'),
+        s: String(Math.floor((rem / 1000) % 60)).padStart(2, '0'),
+      };
+    }
+
+    function buildSpinWheel() {
+      const rotor = document.getElementById('wheel-rotor');
+      const ticker = document.getElementById('wheel-ticker');
+      const container = document.getElementById('wheel-container');
+
+      const segments = [
+        { label: 'Chapter 3 Unlock', color: '#FAD2D8' },
+        { label: 'Next Memories', color: '#F6DF9F' },
+        { label: 'Our Story Continues', color: '#FFF1F3' },
+        { label: 'Tap to Reveal', color: '#F3B6C1' },
+        { label: 'Love Journey', color: '#F9E7B2' },
+        { label: 'Keep Reading', color: '#FDE4E8' },
+      ];
+
+      const step = 360 / segments.length;
+      const stops = segments
+        .map((seg, i) => `${seg.color} ${i * step}deg ${(i + 1) * step}deg`)
+        .join(', ');
+      rotor.style.background = `conic-gradient(${stops})`;
+
+      segments.forEach((seg, i) => {
+        const angle = i * step + step / 2;
+        const tag = document.createElement('div');
+        tag.className =
+          'absolute top-1/2 left-1/2 origin-left text-[11px] font-bold text-ghibli-ink pointer-events-none select-none leading-tight';
+        tag.style.transform = `translate(0, -50%) rotate(${angle - 90}deg) translateX(44px)`;
+        tag.style.width = '78px';
+        tag.textContent = seg.label;
+        rotor.appendChild(tag);
+      });
+
+      const handleSpinAttempt = () => {
+        if (!is1PmUnlocked()) {
+          gsap.fromTo(
+            container,
+            { x: -7 },
+            { x: 0, duration: 0.45, ease: 'elastic.out(1, 0.3)' }
+          );
+          notify('Patience, Monu! Come back at 1:00 PM IST on Nov 22 to spin the wheel.');
+          return;
+        }
+        if (state.wheelSpinning) return;
+
+        state.wheelSpinning = true;
+        const spinDelta = 1800 + Math.floor(Math.random() * 320) + 40;
+        const startAngle = state.wheelAngle;
+        const endAngle = startAngle + spinDelta;
+        let lastSliceIndex = Math.floor(startAngle / step);
+
+        gsap.to(rotor, {
+          rotation: endAngle,
+          duration: 4.2,
+          ease: 'power4.out',
+          onUpdate: () => {
+            const currentRot = Number(gsap.getProperty(rotor, 'rotation')) || 0;
+            const currentSlice = Math.floor(currentRot / step);
+            if (currentSlice !== lastSliceIndex) {
+              lastSliceIndex = currentSlice;
+              // Ticking pointer physics as each wedge passes the top ticker
+              gsap.fromTo(
+                ticker,
+                { rotation: -22 },
+                { rotation: 0, duration: 0.18, ease: 'power2.out' }
+              );
+            }
+          },
+          onComplete: () => {
+            state.wheelAngle = endAngle;
+            state.wheelSpinning = false;
+            state.wheelSpun = true;
+            try {
+              localStorage.setItem(STORAGE_KEYS.wheel, 'true');
+            } catch (e) {}
+            syncLocksAndTimers();
+            fireConfetti(true);
+            notify('🎡 Chapter 2 Unlocked! Scroll down to read Scenes 3A – 5B.');
+          },
+        });
+      };
+
+      document.getElementById('wheel-spin-btn').addEventListener('click', handleSpinAttempt);
+      document.getElementById('wheel-padlock-overlay').addEventListener('click', handleSpinAttempt);
+    }
+
+    /**
+     * =========================================================================
+     * 8. CHAPTER 3: 5:00 PM IST METALLIC GOLD SCRATCH CARD (CANVAS + GSAP)
+     * =========================================================================
+     */
+    let scratchCtx = null;
+    let scratchActive = false;
+    let scratchBound = false;
+
+    function revealChapter3Panels(silent = false) {
+      if (state.scratchRevealed && !silent) return;
+      state.scratchRevealed = true;
+      try {
+        localStorage.setItem(STORAGE_KEYS.scratch, 'true');
+      } catch (e) {}
+
+      const canvas = document.getElementById('scratch-canvas');
+      gsap.to(canvas, {
+        opacity: 0,
+        scale: 1.04,
+        duration: 0.55,
+        ease: 'power2.out',
+        onComplete: () => {
+          canvas.style.display = 'none';
+        },
+      });
+
+      document.getElementById('scratch-pct-label').textContent = 'Scratched: 100% — Unlocked!';
+      document.getElementById('ch3-locked-card').classList.add('hidden');
+      const panels3 = document.getElementById('panels-ch3');
+      const finale = document.getElementById('grand-finale-card');
+      const wasHidden = panels3.classList.contains('hidden');
+
+      panels3.classList.remove('hidden');
+      finale.classList.remove('hidden');
+
+      if (wasHidden) {
+        setupScrollAnimations();
+      }
+
+      if (!silent) {
+        fireConfetti(true);
+        notify('✨ Remaining Chapters Unlocked! Scroll down for our Roka, Wedding & Rishvik.');
+      }
+    }
+
+    function initGoldScratchCanvas() {
+      if (!is5PmUnlocked() && !state.scratchRevealed) return;
+
+      const canvas = document.getElementById('scratch-canvas');
+      if (state.scratchRevealed) {
+        revealChapter3Panels(true);
+        return;
+      }
+
+      const frame = document.getElementById('scratch-frame-box');
+      const rect = frame.getBoundingClientRect();
+      const w = Math.max(260, Math.floor(rect.width || 340));
+      const h = Math.max(185, Math.floor(rect.height || 200));
+
+      canvas.style.display = 'block';
+      canvas.style.opacity = '1';
+      canvas.width = w;
+      canvas.height = h;
+      scratchCtx = canvas.getContext('2d');
+
+      // Metallic gold gradient foil
+      const grad = scratchCtx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, '#D4A24C');
+      grad.addColorStop(0.35, '#F6DF9F');
+      grad.addColorStop(0.7, '#DFB35C');
+      grad.addColorStop(1, '#B8842B');
+      scratchCtx.fillStyle = grad;
+      scratchCtx.fillRect(0, 0, w, h);
+
+      // Subtle foil shimmer dots
+      scratchCtx.fillStyle = 'rgba(255, 255, 255, 0.26)';
+      for (let i = 0; i < 32; i++) {
+        const px = ((i * 61) % (w - 16)) + 8;
+        const py = ((i * 43) % (h - 16)) + 8;
+        scratchCtx.beginPath();
+        scratchCtx.arc(px, py, (i % 3) + 1.5, 0, Math.PI * 2);
+        scratchCtx.fill();
+      }
+
+      scratchCtx.fillStyle = '#2E1A1E';
+      scratchCtx.font = 'bold 19px "Playfair Display", Georgia, serif';
+      scratchCtx.textAlign = 'center';
+      scratchCtx.fillText('Scratch Gold Foil to Unlock', w / 2, h / 2 - 6);
+
+      scratchCtx.font = '600 12px "Plus Jakarta Sans", sans-serif';
+      scratchCtx.fillStyle = '#4E3136';
+      scratchCtx.fillText('Rub with your finger or tap Quick Reveal below', w / 2, h / 2 + 18);
+
+      if (scratchBound) return;
+      scratchBound = true;
+
+      const getCoords = (e) => {
+        const b = canvas.getBoundingClientRect();
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: ((cx - b.left) / b.width) * canvas.width,
+          y: ((cy - b.top) / b.height) * canvas.height,
+        };
+      };
+
+      const scratchAt = (pt) => {
+        if (!scratchCtx || state.scratchRevealed) return;
+        scratchCtx.globalCompositeOperation = 'destination-out';
+        scratchCtx.beginPath();
+        scratchCtx.arc(pt.x, pt.y, 26, 0, Math.PI * 2);
+        scratchCtx.fill();
+        scratchCtx.globalCompositeOperation = 'source-over';
+
+        // Measure cleared percentage
+        const pixels = scratchCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let cleared = 0;
+        let total = 0;
+        for (let i = 3; i < pixels.length; i += 64) {
+          total++;
+          if (pixels[i] < 128) cleared++;
+        }
+        const pct = Math.min(100, Math.round((cleared / Math.max(1, total)) * 100));
+        document.getElementById('scratch-pct-label').textContent = `Scratched: ${pct}%`;
+
+        if (pct >= 45) {
+          revealChapter3Panels(false);
+        }
+      };
+
+      canvas.addEventListener('mousedown', (e) => {
+        scratchActive = true;
+        scratchAt(getCoords(e));
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (scratchActive) scratchAt(getCoords(e));
+      });
+      window.addEventListener('mouseup', () => {
+        scratchActive = false;
+      });
+
+      canvas.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault();
+          scratchActive = true;
+          scratchAt(getCoords(e));
+        },
+        { passive: false }
+      );
+      canvas.addEventListener(
+        'touchmove',
+        (e) => {
+          e.preventDefault();
+          if (scratchActive) scratchAt(getCoords(e));
+        },
+        { passive: false }
+      );
+      canvas.addEventListener('touchend', () => {
+        scratchActive = false;
+      });
+
+      document.getElementById('quick-reveal-btn').addEventListener('click', () => {
+        revealChapter3Panels(false);
+      });
+    }
+
+    /**
+     * =========================================================================
+     * 9. SYNCHRONIZE 1:00 PM & 5:00 PM IST TIME-LOCKS
+     * =========================================================================
+     */
+    function syncLocksAndTimers() {
+      // --- Chapter 2: 1:00 PM IST ---
+      const cd2 = getCountdownParts(TARGET_1PM_IST);
+      document.getElementById('cd2-days').textContent = cd2.d;
+      document.getElementById('cd2-hours').textContent = cd2.h;
+      document.getElementById('cd2-mins').textContent = cd2.m;
+      document.getElementById('cd2-secs').textContent = cd2.s;
+
+      const unlocked1Pm = is1PmUnlocked();
+      const ch2Countdown = document.getElementById('ch2-countdown-box');
+      const padlockOverlay = document.getElementById('wheel-padlock-overlay');
+      const wheelBtnLabel = document.getElementById('wheel-btn-label');
+      const wheelBtnSub = document.getElementById('wheel-btn-sub');
+      const wheelStatus = document.getElementById('wheel-status-msg');
+      const pill2 = document.getElementById('pill-ch2');
+
+      if (unlocked1Pm) {
+        padlockOverlay.classList.add('hidden');
+        wheelBtnLabel.textContent = 'SPIN';
+        wheelBtnSub.textContent = 'Story';
+        pill2.textContent = state.wheelSpun ? 'Ch. 2 ✨' : 'Ch. 2 🎡';
+        if (state.testMode && Date.now() < TARGET_1PM_IST) {
+          ch2Countdown.classList.remove('hidden');
+          document.getElementById('ch2-lock-hint').innerHTML =
+            '<span class="text-ghibli-deep font-bold">Preview / Test Mode Active:</span> 1:00 PM lock bypassed for testing.';
+        } else {
+          ch2Countdown.classList.add('hidden');
+        }
+      } else {
+        ch2Countdown.classList.remove('hidden');
+        padlockOverlay.classList.remove('hidden');
+        wheelBtnLabel.textContent = 'LOCKED';
+        wheelBtnSub.textContent = '1:00 PM';
+        pill2.textContent = 'Ch. 2 🔒';
+      }
+
+      const ch2LockedCard = document.getElementById('ch2-locked-card');
+      const panelsCh2 = document.getElementById('panels-ch2');
+
+      if (state.wheelSpun) {
+        const wasHidden = panelsCh2.classList.contains('hidden');
+        ch2LockedCard.classList.add('hidden');
+        panelsCh2.classList.remove('hidden');
+        wheelStatus.textContent = '✨ Chapter 2 Unlocked! Scroll down to read Scenes 3A – 5B.';
+        if (wasHidden) setupScrollAnimations();
+      } else {
+        ch2LockedCard.classList.remove('hidden');
+        panelsCh2.classList.add('hidden');
+        wheelStatus.textContent = unlocked1Pm
+          ? 'Tap SPIN in the center to unlock Scenes 3A – 5B!'
+          : 'Locked until 1:00 PM IST on November 22, 2026.';
+      }
+
+      // --- Chapter 3: 5:00 PM IST ---
+      const cd3 = getCountdownParts(TARGET_5PM_IST);
+      document.getElementById('cd3-days').textContent = cd3.d;
+      document.getElementById('cd3-hours').textContent = cd3.h;
+      document.getElementById('cd3-mins').textContent = cd3.m;
+      document.getElementById('cd3-secs').textContent = cd3.s;
+
+      const unlocked5Pm = is5PmUnlocked();
+      const ch3Countdown = document.getElementById('ch3-countdown-box');
+      const ch3ScratchWrap = document.getElementById('ch3-scratch-wrapper');
+      const ch3LockedHeading = document.getElementById('ch3-locked-heading');
+      const pill3 = document.getElementById('pill-ch3');
+
+      if (unlocked5Pm) {
+        ch3Countdown.classList.add('hidden');
+        const wasScratchHidden = ch3ScratchWrap.classList.contains('hidden');
+        ch3ScratchWrap.classList.remove('hidden');
+        if (wasScratchHidden && !state.scratchRevealed) {
+          initGoldScratchCanvas();
+        }
+        ch3LockedHeading.textContent = 'Scratch the Gold Foil Above to Unlock Remaining Scenes';
+        pill3.textContent = state.scratchRevealed ? 'Ch. 3 ✨' : 'Ch. 3 🪙';
+      } else {
+        ch3Countdown.classList.remove('hidden');
+        ch3ScratchWrap.classList.add('hidden');
+        ch3LockedHeading.textContent = 'Final Chapters Unlock at 5:00 PM IST';
+        pill3.textContent = 'Ch. 3 🔒';
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 10. SLIDE-OVER CUSTOMIZE IMAGES DRAWER & STANDALONE HTML EXPORTER
+     * =========================================================================
+     */
+    function openDrawer(focusSceneId = null) {
+      const backdrop = document.getElementById('customizer-backdrop');
+      const drawer = document.getElementById('customizer-drawer');
+      const list = document.getElementById('drawer-scene-list');
+
+      list.innerHTML = '';
+      SCENES.forEach((scene) => {
+        const hasCustom = Boolean(state.customImages[scene.id]);
+        const item = document.createElement('div');
+        item.id = `drawer-item-${scene.id}`;
+        item.className =
+          'p-3.5 rounded-2xl border border-ghibli-rose/80 bg-ghibli-blush/35 space-y-2';
+
+        item.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-ghibli-ink">${escHtml(scene.badge)} — ${escHtml(scene.title)}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              hasCustom ? 'bg-emerald-100 text-emerald-800' : 'bg-white text-ghibli-muted'
+            }">
+              ${hasCustom ? 'Custom Art ✓' : 'Placeholder'}
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="flex-1 inline-flex items-center justify-center gap-1.5 bg-white hover:bg-ghibli-blush border border-ghibli-rose text-ghibli-ink text-xs font-semibold py-2 px-3 rounded-xl cursor-pointer transition">
+              <span>📁 Upload .png / .jpg</span>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/*" class="hidden" />
+            </label>
+            ${
+              hasCustom
+                ? `<button type="button" class="clear-one-btn text-xs font-semibold text-ghibli-deep px-2.5 py-2 rounded-xl hover:bg-white cursor-pointer">Clear</button>`
+                : ''
+            }
+          </div>
+        `;
+
+        const fileInput = item.querySelector('input[type="file"]');
+        fileInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            state.customImages[scene.id] = reader.result;
+            saveCustomImages();
+            renderAllChapters();
+            openDrawer(scene.id);
+            notify(`Updated artwork for ${scene.badge}!`);
+          };
+          reader.readAsDataURL(file);
+        });
+
+        const clearBtn = item.querySelector('.clear-one-btn');
+        if (clearBtn) {
+          clearBtn.addEventListener('click', () => {
+            delete state.customImages[scene.id];
+            saveCustomImages();
+            renderAllChapters();
+            openDrawer(scene.id);
+          });
+        }
+
+        list.appendChild(item);
+      });
+
+      backdrop.classList.remove('hidden');
+      gsap.to(backdrop, { opacity: 1, duration: 0.3 });
+      gsap.to(drawer, { x: 0, duration: 0.42, ease: 'power3.out' });
+
+      if (focusSceneId) {
+        setTimeout(() => {
+          const target = document.getElementById(`drawer-item-${focusSceneId}`);
+          if (target) {
+            target.classList.add('ring-2', 'ring-ghibli-coral');
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 120);
+      }
+    }
+
+    function closeDrawer() {
+      const backdrop = document.getElementById('customizer-backdrop');
+      const drawer = document.getElementById('customizer-drawer');
+      gsap.to(drawer, { x: '100%', duration: 0.35, ease: 'power3.in' });
+      gsap.to(backdrop, {
+        opacity: 0,
+        duration: 0.3,
+        onComplete: () => backdrop.classList.add('hidden'),
+      });
+    }
+
+    function downloadStandaloneHtml() {
+      try {
+        const clone = document.documentElement.cloneNode(true);
+        // Ensure exported file starts fresh at the opening animation & closed drawer
+        const drawerEl = clone.querySelector('#customizer-drawer');
+        if (drawerEl) drawerEl.style.transform = 'translateX(100%)';
+        const backdropEl = clone.querySelector('#customizer-backdrop');
+        if (backdropEl) {
+          backdropEl.classList.add('hidden');
+          backdropEl.style.opacity = '0';
+        }
+
+        let source = '<!DOCTYPE html>\n' + clone.outerHTML;
+        const bakedJson = JSON.stringify(state.customImages);
+        source = source.replace(
+          /const BAKED_SCENE_IMAGES = \{[\s\S]*?\};/,
+          `const BAKED_SCENE_IMAGES = ${bakedJson};`
+        );
+
+        const blob = new Blob([source], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'monika-birthday-story.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        notify('⬇️ Downloaded monika-birthday-story.html with all your images baked in!');
+      } catch (err) {
+        notify('Could not generate standalone HTML file. Please try again.');
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 11. INITIALIZE APPLICATION ON DOM READY
+     * =========================================================================
+     */
+    window.addEventListener('DOMContentLoaded', () => {
+      hydrateState();
+      renderAllChapters();
+      buildSpinWheel();
+      syncLocksAndTimers();
+      setupGlobalMicroInteractions();
+
+      if (state.envelopeOpened) {
+        openEnvelope(true);
+      }
+      if (state.scratchRevealed) {
+        revealChapter3Panels(true);
+      }
+
+      // Kick off the blank white screen -> golden-blush GSAP opening timeline
+      runOpeningEntranceTimeline();
+
+      // Clue #1 Envelope click & keyboard support
+      const envelope = document.getElementById('clue-envelope');
+      envelope.addEventListener('click', () => openEnvelope(false));
+      envelope.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openEnvelope(false);
+        }
+      });
+
+      // Live Mode vs Preview / Test Mode Toggle
+      document.getElementById('mode-toggle-btn').addEventListener('click', () => {
+        state.testMode = !state.testMode;
+        const icon = document.getElementById('mode-toggle-icon');
+        const text = document.getElementById('mode-toggle-text');
+        if (state.testMode) {
+          icon.textContent = '🔓';
+          text.textContent = 'Test Mode';
+          notify('Preview / Test Mode ON: 1:00 PM Wheel & 5:00 PM Scratch Card are unlocked for testing!');
+        } else {
+          icon.textContent = '🔒';
+          text.textContent = 'Live Mode';
+          notify('Live Mode ON: Enforcing 1:00 PM & 5:00 PM IST on Nov 22, 2026.');
+        }
+        syncLocksAndTimers();
+      });
+
+      // Customizer Drawer Controls
+      document.getElementById('open-drawer-btn').addEventListener('click', () => openDrawer());
+      document.getElementById('close-drawer-btn').addEventListener('click', closeDrawer);
+      document.getElementById('customizer-backdrop').addEventListener('click', closeDrawer);
+      document.getElementById('download-standalone-btn').addEventListener('click', downloadStandaloneHtml);
+      document.getElementById('reset-all-images-btn').addEventListener('click', () => {
+        state.customImages = {};
+        saveCustomImages();
+        renderAllChapters();
+        openDrawer();
+        notify('All scene images reset to Ghibli-webtoon placeholders.');
+      });
+
+      // Celebrate Again Confetti Button
+      document.getElementById('replay-confetti-btn').addEventListener('click', () => {
+        fireConfetti(true);
+        notify('🎉 Happy Birthday, Monu! Wishing you endless happiness!');
+      });
+
+      // Toast close button
+      document.getElementById('toast-dismiss').addEventListener('click', () => {
+        gsap.to('#toast-banner', { opacity: 0, y: -16, duration: 0.25, pointerEvents: 'none' });
+      });
+
+      // Update countdown clocks every second
+      setInterval(syncLocksAndTimers, 1000);
+
+      // Re-initialize scratch canvas cleanly on window resize
+      window.addEventListener('resize', () => {
+        if (is5PmUnlocked() && !state.scratchRevealed) {
+          scratchBound = false;
+          initGoldScratchCanvas();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
