@@ -74,6 +74,23 @@
       visibility: hidden;
     }
 
+    .art-frame {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+    }
+
+    .art-parallax-img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: min(72vh, 720px);
+      max-height: min(72svh, 720px);
+      object-fit: contain;
+    }
+
     /* Ambient floating sakura & gold particles */
     .ambient-petal {
       position: fixed;
@@ -260,45 +277,7 @@
     </button>
   </div>
 
-  <!-- Top Sticky Utility Bar -->
-  <header
-    id="top-header-bar"
-    class="gsap-init-hidden sticky top-1.5 z-40 max-w-xl mx-auto px-3 pt-2"
-  >
-    <div class="bg-white/85 backdrop-blur-md border border-ghibli-rose/80 rounded-2xl px-3.5 py-2.5 shadow-sm flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2 min-w-0">
-        <span class="text-base shrink-0" aria-hidden="true">📖</span>
-        <span class="font-display font-bold text-xs sm:text-sm text-ghibli-ink truncate">
-          Monu’s Birthday Webtoon
-        </span>
-      </div>
-
-      <div class="flex items-center gap-1.5 shrink-0">
-        <!-- Live Mode vs Preview / Test Mode Toggle -->
-        <button
-          type="button"
-          id="mode-toggle-btn"
-          class="magnetic-btn inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-ghibli-ink border border-ghibli-gold/70 text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
-          title="Switch between Live IST Timers and Preview/Test Mode"
-        >
-          <span id="mode-toggle-icon">🔒</span>
-          <span id="mode-toggle-text">Live Mode</span>
-        </button>
-
-        <!-- Customize Scene Images Drawer Button -->
-        <button
-          type="button"
-          id="open-drawer-btn"
-          class="magnetic-btn inline-flex items-center gap-1 bg-ghibli-blush hover:bg-ghibli-rose/60 text-ghibli-deep border border-ghibli-rose text-[11px] font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
-        >
-          <span>🖼️</span>
-          <span>Customize Images</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Mobile-First Story Container -->
+    <!-- Main Mobile-First Story Container -->
   <main class="relative z-10 max-w-xl mx-auto px-4 pt-6 pb-28">
 
     <!-- =================================================================== -->
@@ -312,7 +291,7 @@
         <span>✨</span>
         <span>22 November 2026</span>
         <span>•</span>
-        <span>Sachin &amp; Monika</span>
+        <span>Sachin &amp; Monika Diaries</span>
       </div>
 
       <h1
@@ -1129,40 +1108,6 @@
         ],
       },
       {
-        id: '5A-1',
-        chapter: 'ch2',
-        badge: 'Scene 5A-1 • 27 Aug 2023',
-        title: 'Bike Ride & Temple Blessings',
-        caption:
-          'Sachin and Monika ride together on his bike and visit a peaceful temple on 27 August 2023.',
-        palette: ['#FCE7EB', '#FFF3E0'],
-        emoji: '🏍️🛕',
-        bubbles: [
-          {
-            kind: 'speech',
-            speaker: 'Monika',
-            text: 'Everything feels so peaceful with you.',
-          },
-        ],
-      },
-      {
-        id: '5A-2',
-        chapter: 'ch2',
-        badge: 'Scene 5A-2 • Regional Park',
-        title: 'Strolling Together at Regional Park',
-        caption:
-          'Walking side by side along the greenery of Regional Park on 27 August 2023.',
-        palette: ['#FFF4E3', '#FDE8EC'],
-        emoji: '🌳☀️',
-        bubbles: [
-          {
-            kind: 'speech',
-            speaker: 'Sachin',
-            text: "I've been waiting for a day just like this with you.",
-          },
-        ],
-      },
-      {
         id: '5B-1',
         chapter: 'ch2',
         badge: 'Scene 5B-1 • The Watch Gift',
@@ -1320,8 +1265,6 @@
       '4A-2c': 'assets/20 Man_texting_late_at_night_422717bb_2K.jpg',
       '4A-2d': 'assets/21 Woman_texting_on_smartphone_c60e6ad3_2K.jpg',
       '4B': 'assets/22 Son_speaking_to_father_about_f922bfe1_2K.jpg',
-      '5A-1': 'assets/22.1 scene-5a-1.jpg',
-      '5A-2': 'assets/22.2 scene-5a-2.jpg',
       '5B-1': 'assets/23 Man_putting_watch_on_woman_1cbe69e3_2K.jpg',
       '5B-2': 'assets/24 Woman_looking_at_wristwatch_1b314f0e_2K.jpg',
       '6B-2': 'assets/25 Families_celebrating_Roka_ceremony_80454877_2K.jpg',
@@ -1440,12 +1383,12 @@
       const displaySrc = customSrc || localSrc;
 
       article.innerHTML = `
-        <div class="art-frame relative overflow-hidden bg-ghibli-blush/40 aspect-[4/5]">
+        <div class="art-frame relative overflow-hidden bg-ghibli-blush/40 min-h-[220px]">
           <img
             src="${escHtml(displaySrc)}"
             data-local-src="${escHtml(localSrc)}"
             alt="${escHtml(scene.title)}"
-            class="art-parallax-img absolute inset-0 w-full h-full object-cover object-center block will-change-transform"
+            class="art-parallax-img object-center will-change-transform"
             onerror="if (this.getAttribute('src') !== this.dataset.localSrc && !this.dataset.fallbackTried) { this.dataset.fallbackTried = 'true'; this.src = this.dataset.localSrc; } else { this.onerror = null; this.style.display = 'none'; }"
           />
         </div>
@@ -1607,7 +1550,6 @@
         card.dataset.scrollAnimationsReady = 'true';
 
         const bubbles = card.querySelectorAll('.bubble-item');
-        const img = card.querySelector('.art-parallax-img');
 
         gsap.set(card, { opacity: 0, y: 45, scale: 0.94, rotationX: 4 });
         if (bubbles.length) {
@@ -1647,24 +1589,6 @@
           );
         }
 
-        if (img) {
-          gsap.fromTo(
-            img,
-            { yPercent: -4, scale: 1.05 },
-            {
-              yPercent: 4,
-              scale: 1.05,
-              ease: 'none',
-              scrollTrigger: {
-                id: 'webtoon-card-st',
-                trigger: card,
-                start: 'top bottom',
-                end: 'bottom top',
-                scrub: 0.6,
-              },
-            }
-          );
-        }
       });
 
       ScrollTrigger.refresh();
