@@ -367,7 +367,7 @@
       </div>
 
       <!-- Chapter 1 Section Header -->
-      <div class="flex items-center gap-3 pt-2">
+      <div id="ch1-header" class="hidden flex items-center gap-3 pt-2">
         <div class="h-px flex-1 bg-ghibli-rose"></div>
         <span class="text-xs font-bold uppercase tracking-widest text-ghibli-deep bg-white/90 px-3.5 py-1.5 rounded-full border border-ghibli-rose shadow-2xs">
           Chapter 1 • The Beginning
@@ -376,13 +376,13 @@
       </div>
 
       <!-- Chapter 1 Webtoon Panels Container -->
-      <div id="panels-ch1" class="space-y-6"></div>
+      <div id="panels-ch1" class="hidden space-y-6"></div>
     </section>
 
     <!-- =================================================================== -->
     <!-- CHAPTER 2: 1:00 PM IST TIME-LOCKED SPIN WHEEL + SCENES 3A – 5B      -->
     <!-- =================================================================== -->
-    <section id="chapter-2" class="scroll-mt-24 mt-12 space-y-6">
+    <section id="chapter-2" class="hidden scroll-mt-24 mt-12 space-y-6">
       <div class="flex items-center gap-3">
         <div class="h-px flex-1 bg-ghibli-rose"></div>
         <span class="text-xs font-bold uppercase tracking-widest text-ghibli-deep bg-white/90 px-3.5 py-1.5 rounded-full border border-ghibli-rose shadow-2xs">
@@ -476,7 +476,7 @@
     <!-- =================================================================== -->
     <!-- CHAPTER 3: 5:00 PM IST GOLD SCRATCH CARD + SCENES 6B-2, 6C-1 & 7    -->
     <!-- =================================================================== -->
-    <section id="chapter-3" class="scroll-mt-24 mt-12 space-y-6">
+    <section id="chapter-3" class="hidden scroll-mt-24 mt-12 space-y-6">
       <div class="flex items-center gap-3">
         <div class="h-px flex-1 bg-ghibli-rose"></div>
         <span class="text-xs font-bold uppercase tracking-widest text-ghibli-deep bg-white/90 px-3.5 py-1.5 rounded-full border border-ghibli-rose shadow-2xs">
@@ -606,14 +606,14 @@
     <a
       href="#chapter-2"
       id="pill-ch2"
-      class="px-3.5 py-1.5 rounded-full text-xs font-semibold hover:bg-white/15 transition"
+      class="hidden px-3.5 py-1.5 rounded-full text-xs font-semibold hover:bg-white/15 transition"
     >
       Ch. 2 • 1 PM
     </a>
     <a
       href="#chapter-3"
       id="pill-ch3"
-      class="px-3.5 py-1.5 rounded-full text-xs font-semibold hover:bg-white/15 transition"
+      class="hidden px-3.5 py-1.5 rounded-full text-xs font-semibold hover:bg-white/15 transition"
     >
       Ch. 3 • 5 PM
     </a>
@@ -1287,6 +1287,7 @@
       envelope: 'monu_webtoon_2026_envelope',
       wheel: 'monu_webtoon_2026_wheel',
       scratch: 'monu_webtoon_2026_scratch',
+      chapter1: 'monu_webtoon_2026_chapter1_complete',
     };
 
     const state = {
@@ -1296,6 +1297,7 @@
       wheelSpinning: false,
       wheelAngle: 0,
       scratchRevealed: false,
+      chapter1Complete: false,
       customImages: Object.assign({}, BAKED_SCENE_IMAGES),
     };
 
@@ -1355,6 +1357,7 @@
         state.envelopeOpened = localStorage.getItem(STORAGE_KEYS.envelope) === 'true';
         state.wheelSpun = localStorage.getItem(STORAGE_KEYS.wheel) === 'true';
         state.scratchRevealed = localStorage.getItem(STORAGE_KEYS.scratch) === 'true';
+        state.chapter1Complete = localStorage.getItem(STORAGE_KEYS.chapter1) === 'true';
       } catch (e) {
         console.warn('Storage unavailable:', e);
       }
@@ -1415,6 +1418,7 @@
       });
 
       setupScrollAnimations();
+      setupChapter1CompletionTracking();
     }
 
     /**
@@ -1451,13 +1455,6 @@
         )
 
         // Step c: Top header bar glides down smoothly
-        .fromTo(
-          '#top-header-bar',
-          { autoAlpha: 0, y: -30 },
-          { autoAlpha: 1, y: 0, duration: 0.75, ease: 'power3.out' },
-          '-=0.7'
-        )
-
         // Step d: Hero date badge, main title ("Happy Birthday, Monu"), and subtitle stagger in
         .fromTo(
           '#hero-date-badge',
@@ -1600,6 +1597,82 @@
       });
     }
 
+    function revealChapter2Section() {
+      if (!state.chapter1Complete) return;
+
+      const section = document.getElementById('chapter-2');
+      const pill = document.getElementById('pill-ch2');
+      const wasHidden = section.classList.contains('hidden');
+
+      section.classList.remove('hidden');
+      pill.classList.remove('hidden');
+
+      if (wasHidden) {
+        gsap.fromTo(section, { autoAlpha: 0, y: 24 }, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.7,
+          ease: 'power3.out',
+        });
+        ScrollTrigger.refresh();
+      }
+    }
+
+    function revealChapter3Section() {
+      if (!state.chapter1Complete || !state.wheelSpun) return;
+
+      const section = document.getElementById('chapter-3');
+      const pill = document.getElementById('pill-ch3');
+      const wasHidden = section.classList.contains('hidden');
+
+      section.classList.remove('hidden');
+      pill.classList.remove('hidden');
+
+      if (wasHidden) {
+        gsap.fromTo(section, { autoAlpha: 0, y: 24 }, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.7,
+          ease: 'power3.out',
+        });
+        ScrollTrigger.refresh();
+      }
+    }
+
+    function markChapter1Complete() {
+      if (state.chapter1Complete) return;
+
+      state.chapter1Complete = true;
+      try {
+        localStorage.setItem(STORAGE_KEYS.chapter1, 'true');
+      } catch (e) {}
+
+      revealChapter2Section();
+      syncLocksAndTimers();
+      notify('Chapter 1 Complete! Chapter 2 is now unlocked.');
+    }
+
+    function setupChapter1CompletionTracking() {
+      if (state.chapter1Complete) {
+        revealChapter2Section();
+        return;
+      }
+
+      const cards = document.querySelectorAll('#panels-ch1 .webtoon-card');
+      const lastCard = cards[cards.length - 1];
+      if (!lastCard) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        const entry = entries[0];
+        if (entry.isIntersecting) {
+          markChapter1Complete();
+          observer.disconnect();
+        }
+      }, { threshold: 0.7, rootMargin: '0px 0px -10% 0px' });
+
+      observer.observe(lastCard);
+    }
+
     // Top reading progress bar + magnetic hover micro-interactions
     function setupGlobalMicroInteractions() {
       window.addEventListener(
@@ -1635,6 +1708,28 @@
      * 6. CHAPTER 1: 3D WAX-SEAL ENVELOPE OPENING (GSAP)
      * =========================================================================
      */
+    function revealChapter1Panels(instant = false) {
+      const header = document.getElementById('ch1-header');
+      const panels = document.getElementById('panels-ch1');
+      const wasHidden = panels.classList.contains('hidden');
+
+      header.classList.remove('hidden');
+      panels.classList.remove('hidden');
+
+      if (wasHidden) {
+        setupScrollAnimations();
+      }
+      setupChapter1CompletionTracking();
+
+      if (!instant) {
+        gsap.fromTo(
+          [header, panels],
+          { autoAlpha: 0, y: 24 },
+          { autoAlpha: 1, y: 0, duration: 0.65, stagger: 0.12, ease: 'power3.out' }
+        );
+      }
+    }
+
     function openEnvelope(instant = false) {
       if (state.envelopeOpened && !instant) return;
       state.envelopeOpened = true;
@@ -1655,6 +1750,7 @@
         gsap.set(flap, { rotationX: 180, opacity: 0.25 });
         closedView.classList.add('hidden');
         openedView.classList.remove('hidden');
+        revealChapter1Panels(true);
         return;
       }
 
@@ -1694,6 +1790,7 @@
             duration: 0.65,
             ease: 'back.out(1.6)',
             onComplete: () => {
+              revealChapter1Panels(false);
               fireConfetti(true);
               notify('🔑 Clue #1 Revealed: Look inside your dressing table drawer!');
             },
@@ -1996,6 +2093,14 @@
       const wheelBtnSub = document.getElementById('wheel-btn-sub');
       const wheelStatus = document.getElementById('wheel-status-msg');
       const pill2 = document.getElementById('pill-ch2');
+      const chapter2Section = document.getElementById('chapter-2');
+
+      if (state.chapter1Complete) {
+        revealChapter2Section();
+      } else {
+        chapter2Section.classList.add('hidden');
+        pill2.classList.add('hidden');
+      }
 
       if (unlocked1Pm) {
         padlockOverlay.classList.add('hidden');
@@ -2014,7 +2119,7 @@
       const ch2LockedCard = document.getElementById('ch2-locked-card');
       const panelsCh2 = document.getElementById('panels-ch2');
 
-      if (state.wheelSpun) {
+      if (state.chapter1Complete && state.wheelSpun) {
         const wasHidden = panelsCh2.classList.contains('hidden');
         ch2LockedCard.classList.add('hidden');
         panelsCh2.classList.remove('hidden');
@@ -2040,6 +2145,14 @@
       const ch3ScratchWrap = document.getElementById('ch3-scratch-wrapper');
       const ch3LockedHeading = document.getElementById('ch3-locked-heading');
       const pill3 = document.getElementById('pill-ch3');
+      const chapter3Section = document.getElementById('chapter-3');
+
+      if (state.chapter1Complete && state.wheelSpun) {
+        revealChapter3Section();
+      } else {
+        chapter3Section.classList.add('hidden');
+        pill3.classList.add('hidden');
+      }
 
       if (unlocked5Pm) {
         ch3Countdown.classList.add('hidden');
@@ -2218,25 +2331,7 @@
         }
       });
 
-      // Live Mode vs Preview / Test Mode Toggle
-      document.getElementById('mode-toggle-btn').addEventListener('click', () => {
-        state.testMode = !state.testMode;
-        const icon = document.getElementById('mode-toggle-icon');
-        const text = document.getElementById('mode-toggle-text');
-        if (state.testMode) {
-          icon.textContent = '🔓';
-          text.textContent = 'Test Mode';
-          notify('Preview / Test Mode ON: 1:00 PM Wheel & 5:00 PM Scratch Card are unlocked for testing!');
-        } else {
-          icon.textContent = '🔒';
-          text.textContent = 'Live Mode';
-          notify('Live Mode ON: Enforcing 1:00 PM & 5:00 PM IST on Nov 22, 2026.');
-        }
-        syncLocksAndTimers();
-      });
-
       // Customizer Drawer Controls
-      document.getElementById('open-drawer-btn').addEventListener('click', () => openDrawer());
       document.getElementById('close-drawer-btn').addEventListener('click', closeDrawer);
       document.getElementById('customizer-backdrop').addEventListener('click', closeDrawer);
       document.getElementById('download-standalone-btn').addEventListener('click', downloadStandaloneHtml);
